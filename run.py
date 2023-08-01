@@ -1,6 +1,7 @@
 from core.Logger import *
 import sys
 from utils.Start import *
+import os
 error = False
 
 global logger
@@ -23,6 +24,6 @@ while not logger.setup_status == 'exit':
 
 # # # # # Exit # # # # #
 logger.cleanup()
-if error: print(error)
+if error: print(error, '    ', os.getcwd())
 sys.exit(0)
 

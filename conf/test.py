@@ -1,0 +1,67 @@
+from Experiments.MatchPort import *
+from Stimuli.Grating import *
+from Behaviors.MultiPort import *
+from Stimuli.PandaVR.Panda import *
+
+# define session parameters
+session_params = {
+    'trial_selection'    : 'staircase',
+    'max_reward'         : 3000,
+    'bias_window'        : 5,
+    'staircase_window'   : 10,
+    'stair_up'           : 0.7,
+    'stair_down'         : 0.6,
+    'setup_conf_idx'     : 0,
+}
+
+default_key = {'background_color': (0, 0, 0),
+                'ambient_color': (0.1, 0.1, 0.1, 1),
+                'light_idx': (1, 2),
+                'light_color': (np.array([0.7, 0.7, 0.7, 1]), np.array([0.2, 0.2, 0.2, 1])),
+                'light_dir': (np.array([0, -20, 0]), np.array([180, -20, 0])),
+                'pos_x': 0,
+                'pos_y': 0,
+                'mag': .5,
+                'rot': 0,
+                'tilt': 0,
+                'yaw': 0,
+                'dur': 5,
+                'id' : 0}
+
+exp = Experiment()
+exp.setup(logger, MultiPort, session_params)
+
+# define stimulus conditions
+key = {
+    'contrast'           : 100,
+    'spatial_freq'       : .05,   # cycles/deg
+    'square'             : 0,     # squarewave or Guassian
+    'temporal_freq'      : 1,     # cycles/sec
+    'flatness_correction': 1,     # adjustment of spatiotemporal frequencies based on animal distance
+    'duration'           : 5000,
+    'difficulty'         : 1,
+    'timeout_duration'   : 4000,
+    'trial_duration'     : 5000,
+    'intertrial_duration': 1000,
+    'init_duration'      : 100,
+    'delay_duration'     : 2000,
+    'reward_amount'      : 8
+}
+
+repeat_n = 1
+conditions = []
+
+ports = {1: 0,
+         2: 90}
+
+Grating_Stimuli = Grating() if session_params['setup_conf_idx'] ==0 else GratingRP()
+for port in ports:
+    conditions += exp.make_conditions(stim_class=Grating_Stimuli, conditions={**key,
+                                                                              'theta'        : ports[port],
+                                                                              'reward_port'  : port,
+                                                                              'response_port': port})
+
+# run experiments
+exp.push_conditions(conditions)
+exp.start()
+
