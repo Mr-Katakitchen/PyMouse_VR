@@ -1,7 +1,8 @@
 from core.Logger import *
 import sys
 from utils.Start import *
-import os
+import traceback  # Import the traceback module
+
 error = False
 
 global logger
@@ -17,6 +18,10 @@ while not logger.setup_status == 'exit':
         except Exception as e:
             error = e
             logger.update_setup_info({'state': 'ERROR!', 'notes': str(e), 'status': 'exit'})
+
+            # Print the traceback information for the error
+            traceback.print_exc()
+
         if logger.manual_run:  logger.update_setup_info({'status': 'exit'}); break
         elif logger.setup_status not in ['exit', 'running']:  # restart if session ended
             logger.update_setup_info({'status': 'ready'})  # restart
@@ -24,6 +29,9 @@ while not logger.setup_status == 'exit':
 
 # # # # # Exit # # # # #
 logger.cleanup()
-if error: print(error, '    ', os.getcwd())
-sys.exit(0)
 
+# Print the traceback information if there was an error
+if error:
+    traceback.print_exc()
+
+sys.exit(0)

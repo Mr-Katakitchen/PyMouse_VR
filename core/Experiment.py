@@ -40,19 +40,23 @@ class ExperimentClass:
             self.states = states
             self.futureState = states['Entry']
             self.currentState = states['Entry']
-            self.exitState = states['Exit']
+            self.exitState = states['Exit']            
 
         # # # # Main state loop # # # # #
         def run(self):
             while self.futureState != self.exitState:
+                print("futState:", self.futureState) 
                 if self.currentState != self.futureState:
-                    self.currentState.exit()
+                    self.currentState.exit()  #somewhere around here
                     self.currentState = self.futureState
                     self.currentState.entry()
                 self.currentState.run()
-                self.futureState = self.states[self.currentState.next()]
+                self.futureState = self.states[self.currentState.next()]  
             self.currentState.exit()
+            print("so far so good3") 
             self.exitState.run()
+            print("so far so good4")
+            
 
     def setup(self, logger, BehaviorClass, session_params):
         self.running = False
@@ -72,7 +76,9 @@ class ExperimentClass:
         states = dict()
         for state in self.__class__.__subclasses__():  # Initialize states
             states.update({state().__class__.__name__: state(self)})
+            print(state)
         state_control = self.StateMachine(states)
+        print(state_control)
         self.interface.set_running_state(True)
         state_control.run()
 
