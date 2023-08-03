@@ -39,8 +39,8 @@ class DummyBall(Behavior, dj.Manual):
         """
 
     cond_tables = ['VRBall', 'VRBall.Response', 'VRBall.Reward']
-    # required_fields = ['x0', 'y0', 'radius', 'response_loc_y', 'response_loc_x',
-    #                    'reward_loc_x', 'reward_loc_y', 'reward_amount']
+    required_fields = ['x0', 'y0', 'radius', 'response_loc_y', 'response_loc_x',
+                       'reward_loc_x', 'reward_loc_y', 'reward_amount']
     default_key = {'reward_type': 'water', 'speed_thr': 0.025,
                    'response_port': 1, 'reward_port': 1, 'theta0': 0}
 
@@ -51,17 +51,38 @@ class DummyBall(Behavior, dj.Manual):
         self.previous_loc = [0, 0]
         self.curr_loc = [0, 0]
         super(DummyBall, self).setup(exp)
-        # self.vr = Ball(exp)
+        #self.vr = Ball(exp)
 
     def prepare(self, condition):
         self.in_position_flag = False
         if condition['x0'] < 0 or condition['y0'] < 0:
             x0, y0, theta0, time = self.vr.getPosition()
-            self.vr.setPosition(condition['x_sz'], condition['y_sz'], x0, y0, theta0)
+            self.setPosition(condition['x_sz'], condition['y_sz'], x0, y0, theta0)
         else:
-            self.vr.setPosition(condition['x_sz'], condition['y_sz'], condition['x0'], condition['y0'],
+            self.setPosition(condition['x_sz'], condition['y_sz'], condition['x0'], condition['y0'],
                                 condition['theta0'])
         super().prepare(condition)
+        
+    def setPosition(self, xmx=1, ymx=1, x0=0, y0=0, theta0=0):
+        self.loc_x = x0
+        self.loc_y = y0
+        self.theta = theta0
+        self.xmx = xmx
+        self.ymx = ymx
+        
+    def getPosition(self):
+        return self.loc_x, self.loc_y, self.theta,  self.timestamp
+
+    def getSpeed(self):
+        return self.speed
+
+    def cleanup(self):
+        try:
+            self.thread_end.set()
+            self.mouse1.close()
+            self.mouse2.close()
+        except:
+            print('ball not running')
 
     def is_ready(self):
         x, y, theta, tmst = self.get_position()
@@ -177,6 +198,8 @@ class DummyBall(Behavior, dj.Manual):
         self.env.ypothetiko_pontiki.setZ(0)
         return task.cont
         
+        
+    
         
 
     

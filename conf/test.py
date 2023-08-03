@@ -59,7 +59,9 @@ for port in ports:
     conditions += exp.make_conditions(stim_class=Grating_Stimuli, conditions={**key,
                                                                               'theta'        : ports[port],
                                                                               'reward_port'  : port,
-                                                                              'response_port': port})
+                                                                              'response_port': port,
+                                                                              'x0': 0,
+                                                                              'y0': 0})
 panda_conditions = {
                 'background_color': (0/255, 0/255, 0/255),
                 'ambient_color': (0.1, 0.1, 0.1, 1),
@@ -88,7 +90,7 @@ panda_conditions = {
                 'plane_yaw': 0,
                 }
 
-conditions[0].update(panda_conditions)
+# conditions[0].update(panda_conditions)
 
 # run experiments
 exp.push_conditions(conditions)

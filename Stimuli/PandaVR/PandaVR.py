@@ -31,7 +31,7 @@ class Objects(dj.Lookup):
 
 
 @stimulus.schema
-class Panda(Stimulus, ShowBase, dj.Manual):
+class Panda(Stimulus, dj.Manual):
     # definition = """
     # # This class handles the presentation of Objects with Panda3D
     # -> StimCondition
@@ -102,13 +102,12 @@ class Panda(Stimulus, ShowBase, dj.Manual):
 
     object_files = dict()
     objects = dict()
-
-    def init(self): #, exp):
-        #Stimulus.init(self) #exp)
-        super().init()
-        #self.__class__ = cls.__class__(cls.__name__ + "ShowBase", (cls, ShowBase), {})
-        self.is_raspberry_pi_logger = False
-        if self.is_raspberry_pi_logger:
+        
+    def init(self, exp):
+        super().init(exp)
+        cls = self.__class__
+        self.__class__ = cls.__class__(cls.__name__ + "ShowBase", (cls, ShowBase), {})
+        if self.logger.is_pi:
             self.fStartDirect = True
             self.windowType = None
             self.Fullscreen = True
@@ -120,7 +119,7 @@ class Panda(Stimulus, ShowBase, dj.Manual):
             self.Fullscreen = False
             self.path = '\\Stimuli\\objects\\'  # default path to copy local stimuli
             self.movie_path = os.path.dirname(os.path.abspath(__file__)) + '/movies/'
-        #ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
+        ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
 
 
     def setup(self):

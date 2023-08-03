@@ -28,6 +28,7 @@ class VROdors(Stimulus, dj.Manual):
 
     def init(self, exp):
         super().init(exp)
+        print("\n ", self.logger.get(table='SetupConfiguration.Speaker', key=self.exp.params, as_dict=True))
         self.speaker_properties = self.logger.get(table='SetupConfiguration.Speaker', key=self.exp.params, as_dict=True)[0]
 
     def start(self):

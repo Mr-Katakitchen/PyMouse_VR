@@ -106,7 +106,7 @@ class ExperimentClass:
         if self.quit: self.running = False
         return self.quit
 
-    def make_conditions(self, stim_class, conditions, stim_periods=None):
+    def make_conditions(self, stim_class, conditions, stim_periods=None):        
         stim_name = stim_class.__class__.__name__
         if stim_name not in self.stims:
             stim_class.init(self)
@@ -124,7 +124,7 @@ class ExperimentClass:
                 for i in range(len(stim_periods)): conditions[stim_periods[i]].append(comb[i])
             conditions = factorize(conditions)
 
-        conditions = self.log_conditions(**self.beh.make_conditions(conditions))
+        conditions = self.log_conditions(**self.beh.make_conditions(conditions))  
         for cond in conditions:
             assert np.all([field in cond for field in self.required_fields])
             cond.update({**self.default_key, **self.params, **cond, 'experiment_class': self.cond_tables[0]})
