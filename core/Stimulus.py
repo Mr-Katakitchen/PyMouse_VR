@@ -135,8 +135,6 @@ class Stimulus:
 
     def make_conditions(self, conditions=[]):
         """generate and store stimulus condition hashes"""
-        print(conditions)
-
         for cond in conditions:
             assert np.all([field in cond for field in self.required_fields])
             cond.update({**self.default_key, **cond})
