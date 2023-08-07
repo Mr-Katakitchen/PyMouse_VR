@@ -1,4 +1,4 @@
-import numpy, socket, json, os, pathlib, threading, subprocess, time
+import numpy, socket, json, os, pathlib, threading, subprocess, time, sys
 from queue import PriorityQueue
 from datetime import datetime
 from dataclasses import dataclass
@@ -8,6 +8,7 @@ import datajoint as dj
 from utils.helper_functions import *
 from utils.Timer import Timer
 from utils.Writer import Writer
+
 
 dj.config["enable_python_native_blobs"] = True
 
@@ -176,7 +177,7 @@ class Logger:
                                     'total_liquid': self.total_reward, 'state': self.curr_state})
 
     def cleanup(self):
-        while not self.queue.empty(): print('Waiting for empty queue... qsize: %d' % self.queue.qsize()); time.sleep(1)
+        while not self.queue.empty(): print('Waiting for empty queue... qsize: %d' % self.queue.qsize()); time.sleep(0.0001)
         self.thread_end.set()
 
     def createDataset(self, path, target_path, dataset_name, dataset_type):

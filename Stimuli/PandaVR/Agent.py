@@ -28,18 +28,19 @@ class Agent(ShowBase):
 
     def load(self):
         self.timer.start()
-        model_path = self.env.object_files['obj' + str(self.cond['id'])]
-        self.model = self.env.loader.loadModel(model_path)
+        # model_path = self.env.object_files['obj' + str(self.cond['id'])]
+        # self.model = self.env.loader.loadModel(model_path)
+        self.model = self.env.loader.loadModel(self.env.object_files[self.cond['id']])
         
         positioning = self.object_positioning()
         
         self.model.reparentTo(self.env.render)
-        # self.task = self.env.taskMgr.doMethodLater(self.self.cond['delay']/1000, self.objTask, self.name)
+        self.task = self.env.taskMgr.doMethodLater(self.cond['delay']/1000, self.objTask, self.name)
         
         self.set_movement(positioning)
         
         # Create Collision Node that surrounds the object
-        Collision(self.env, self.model, False, True).make_object_collidable()
+        Collision(self.env, self.model, False).make_object_collidable()
         
         
 
@@ -74,8 +75,9 @@ class Agent(ShowBase):
         
     def object_positioning(self):
         
-        self.model.setScale(self.cond['mag'])
+        self.model.setScale(self.cond['mag'] + 3)
         self.model.setHpr(self.cond['rot'], self.cond['tilt'], self.cond['yaw'])
+        self.model.setPos(self.cond['pos_x'], self.cond['pos_y'], self.cond['pos_z'])
         d = self.d #distance of objects from plane boundries
         adjusted_z = self.cond['pos_z'] #Some models are a little higher or lower apo kataskeyis tous     
         grounded_z = 0 - get_bounds(self.model)['z0'] 
@@ -96,18 +98,19 @@ class Agent(ShowBase):
         dy = op * (self.point['y1'] - self.point['y0'] - 2 * self.d)
         dp = 360
          
-        pos_interval1 = self.model.posInterval(10, start_pos + (0,dy,0), start_pos)
-        hpr_interval1 = self.model.hprInterval(6, start_hpr + (dp,0,0), start_hpr)
+        pos_interval1 = self.model.posInterval(15, start_pos + (0,dy,0), start_pos)
+        hpr_interval1 = self.model.hprInterval(8, start_hpr + (dp,0,0), start_hpr)
         pos_interval2 = self.model.posInterval(10, start_pos, start_pos + (0,dy,0))
         hpr_interval2 = self.model.hprInterval(10, start_hpr, start_hpr + (dp,0,0))
         parallel1 = Parallel(pos_interval1, hpr_interval1, name="go")
         parallel2 = Parallel(pos_interval2, hpr_interval2, name="return")
         
         Sequence(
-            Wait(2.0),
-            parallel1,
-            Wait(2.0),
-            parallel2
+            # Wait(2.0),
+            # parallel1,
+            # Wait(2.0),
+            # parallel2
+            hpr_interval1
         ).loop()
         
 

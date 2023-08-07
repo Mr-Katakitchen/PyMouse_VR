@@ -1,9 +1,22 @@
 from core.Behavior import *
 from Interfaces.Ball import *
-
+from panda3d.core import Vec3
+from direct.showbase.ShowBase import ShowBase
 
 # @behavior.schema
-class DummyBall(Behavior, dj.Manual):
+class DummyBall(Behavior, ShowBase, dj.Manual):
+    update_location, keymap, = True, {}
+    camera_node = None
+    keyMap = {"w" : False, 
+                "s" : False, 
+                "a" : False, 
+                "d" : False, 
+                "arrow_right" : False, 
+                "arrow_left" : False,
+                "arrow_up" : False,
+                "arrow_down" : False}
+
+    
     definition = """
     # This class handles the behavior variables for RP
     ->BehCondition
@@ -45,8 +58,24 @@ class DummyBall(Behavior, dj.Manual):
                    'response_port': 1, 'reward_port': 1, 'theta0': 0}
 
     def __init__(self):
-        self.env = 0
+        self.accept("w", self.setKey, ["w", True])
+        self.accept("s", self.setKey, ["s", True])	
+        self.accept("a", self.setKey, ["a", True])	
+        self.accept("d", self.setKey, ["d", True])
+        self.accept("arrow_right", self.setKey, ["arrow_right", True])
+        self.accept("arrow_left", self.setKey, ["arrow_left", True])
+        self.accept("arrow_up", self.setKey, ["arrow_up", True])
+        self.accept("arrow_down", self.setKey, ["arrow_down", True])
 
+        self.accept("w-up", self.setKey, ["w", False])
+        self.accept("s-up", self.setKey, ["s", False])
+        self.accept("a-up", self.setKey, ["a", False])
+        self.accept("d-up", self.setKey, ["d", False])
+        self.accept("arrow_right-up", self.setKey, ["arrow_right", False])
+        self.accept("arrow_left-up", self.setKey, ["arrow_left", False])
+        self.accept("arrow_up-up", self.setKey, ["arrow_up", False])
+        self.accept("arrow_down-up", self.setKey, ["arrow_down", False])
+    
     def setup(self, exp):
         self.previous_loc = [0, 0]
         self.curr_loc = [0, 0]
@@ -56,7 +85,7 @@ class DummyBall(Behavior, dj.Manual):
     def prepare(self, condition):
         self.in_position_flag = False
         if condition['x0'] < 0 or condition['y0'] < 0:
-            x0, y0, theta0, time = self.vr.getPosition()
+            x0, y0, theta0, time = self.getPosition()
             self.setPosition(condition['x_sz'], condition['y_sz'], x0, y0, theta0)
         else:
             self.setPosition(condition['x_sz'], condition['y_sz'], condition['x0'], condition['y0'],
@@ -71,10 +100,11 @@ class DummyBall(Behavior, dj.Manual):
         self.ymx = ymx
         
     def getPosition(self):
+        print(self.loc_x, self.loc_y, self.theta,  self.timestamp)
         return self.loc_x, self.loc_y, self.theta,  self.timestamp
 
     def getSpeed(self):
-        return self.speed
+        return 0
 
     def cleanup(self):
         try:
@@ -92,7 +122,7 @@ class DummyBall(Behavior, dj.Manual):
         return in_position
 
     def is_running(self):
-        return self.vr.getSpeed() > self.curr_cond['speed_thr']
+        return self.getSpeed() > self.curr_cond['speed_thr']
 
     def is_in_correct_loc(self):
         x, y, theta, tmst = self.get_position()
@@ -108,7 +138,7 @@ class DummyBall(Behavior, dj.Manual):
         return in_position
 
     def get_position(self):
-        return self.vr.getPosition()
+        return 5, 5, 0, 0 #fix it
 
     def reward(self):
         self.interface.give_liquid(self.response.port)
@@ -121,47 +151,17 @@ class DummyBall(Behavior, dj.Manual):
 
     def exit(self):
         super().exit()
-        self.vr.cleanup()
+        self.cleanup()
         self.interface.cleanup()
-        
-        
-    def key_mapping(self):
-        self.keyMap = {"w" : False, 
-                       "s" : False, 
-                       "a" : False, 
-                       "d" : False, 
-                       "arrow_right" : False, 
-                       "arrow_left" : False,
-                       "arrow_up" : False,
-                       "arrow_down" : False}
-
-        self.env.accept("w", self.setKey, ["w", True])
-        self.env.accept("s", self.setKey, ["s", True])	
-        self.env.accept("a", self.setKey, ["a", True])	
-        self.env.accept("d", self.setKey, ["d", True])
-        self.env.accept("arrow_right", self.setKey, ["arrow_right", True])
-        self.env.accept("arrow_left", self.setKey, ["arrow_left", True])
-        self.env.accept("arrow_up", self.setKey, ["arrow_up", True])
-        self.env.accept("arrow_down", self.setKey, ["arrow_down", True])
-
-
-        self.env.accept("w-up", self.setKey, ["w", False])
-        self.env.accept("s-up", self.setKey, ["s", False])
-        self.env.accept("a-up", self.setKey, ["a", False])
-        self.env.accept("d-up", self.setKey, ["d", False])
-        self.env.accept("arrow_right-up", self.setKey, ["arrow_right", False])
-        self.env.accept("arrow_left-up", self.setKey, ["arrow_left", False])
-        self.env.accept("arrow_up-up", self.setKey, ["arrow_up", False])
-        self.env.accept("arrow_down-up", self.setKey, ["arrow_down", False])
-        
-        self.env.taskMgr.add(self.camera_control, "Camera control")
-        self.env.taskMgr.add(self.keep_me_grounded, "Keep z position at level")
-        
+            
+     
     def setKey(self, key, value):
         self.keyMap[key] = value
-    
-    def camera_control(self, task):
-        dt = globalClock.getDt()
+            
+        # self.env.taskMgr.add(self.keep_me_grounded, "Keep z position at level")
+        
+    def camera_positioning(self, camera_node, dt):
+        
         # if(dt > .02):
         #     return task.cont
             
@@ -180,22 +180,21 @@ class DummyBall(Behavior, dj.Manual):
         if move_direction.length() > 0:
             move_direction.normalize()
             
-        self.ypothetiko_pontiki.setPos(self.ypothetiko_pontiki, move_direction * moving_speed * dt)  
+        camera_node.setPos(camera_node, move_direction * moving_speed * dt)  
             
         if(self.keyMap["arrow_right"] == True):
-            self.ypothetiko_pontiki.setH(self.ypothetiko_pontiki, -70 * dt)
+            camera_node.setH(camera_node, -70 * dt)
         if(self.keyMap["arrow_left"] == True):
-            self.ypothetiko_pontiki.setH(self.ypothetiko_pontiki, 70 * dt)
+            camera_node.setH(camera_node, 70 * dt)
         if(self.keyMap["arrow_up"] == True):
-            self.ypothetiko_pontiki.setP(self.ypothetiko_pontiki, 10 * dt)
+            camera_node.setP(camera_node, 10 * dt)
         if(self.keyMap["arrow_down"] == True):
-            self.ypothetiko_pontiki.setP(self.ypothetiko_pontiki, -10 * dt)
-    
-        return task.cont
+            camera_node.setP(camera_node, -10 * dt)
+
     
     def keep_me_grounded(self, task):
-        self.env.ypothetiko_pontiki.setR(0)
-        self.env.ypothetiko_pontiki.setZ(0)
+        self.env.self.camera_node.setR(0)
+        self.env.self.camera_node.setZ(0)
         return task.cont
         
         

@@ -18,7 +18,7 @@ class Plane(ShowBase):
         
         self.plane_positioning()
         
-        Collision(self.env, self.model, False, True).create_collision_walls(self.get_plane_bounds())
+        Collision(self.env, self.model, False).create_collision_walls(self.get_plane_bounds())
         # Collision(self.env, self.model, False, True).create_collision_floor(1)
         # Collision(self.env, self.model, False, True).create_collision_floor(0)
         self.model.reparentTo(self.env.render)

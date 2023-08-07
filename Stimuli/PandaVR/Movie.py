@@ -10,7 +10,7 @@ class Movie(ShowBase):
         self.sfxManagerList = self.env.sfxManagerList
         loader = Loader(self)
         # file_name = self.get_clip_info(self.curr_cond, 'file_name')
-        self.movie_path = "models/" #sad
+        # self.movie_path = "models/" #sad
         self.mov_texture = loader.loadTexture(self.movie_path + movie_name)
         self.mov_sound = loader.loadSfx(self.movie_path + movie_name)
         self.mov_sound.play()

@@ -27,7 +27,7 @@ radius = 2**.5*(scale/2) - non_resp
 def_key = {
         'x_sz'                  : scale,
         'y_sz'                  : scale,
-        'trial_duration'        : 60000,
+        'trial_duration'        : 6000,
         'response_loc_x'        : (0, scale, scale, 0),
         'response_loc_y'        : (0, 0, scale, scale),
         'odor_x'                : (0, scale, scale, 0),
@@ -74,7 +74,7 @@ panda_conditions = {
 
 conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                               'difficulty'         : 0,
-                              'trial_duration'     : 8000,
+                              'trial_duration'     : 800000,
                               'x_sz'               : scale*10,
                               'y_sz'               : scale*10,
                               'reward_loc_x'       : scale/2*10,
@@ -84,27 +84,28 @@ conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                               'extiction_factor'   : 300,
                               'radius'             : radius*30,
                               'reward_amount'      : 10,
-                              'intertrial_duration': [800, 1000, 800, 1000],
+                              'intertrial_duration': 800,
                 	          'x0'                 : (scale/2)*10,
                         	  'y0'                 : (scale/2)*10+.18,
-                           
+                            #  'obj_id':4,
+                            #  'obj_dur':10000,
                 'background_color': (0/255, 0/255, 0/255),
                 'ambient_color': (0.1, 0.1, 0.1, 1),
                 'light_idx': (1, 2, 3),
                 'light_color': (np.array([0.8, 0.8, 0.8, 1]), np.array([0.8, 0.8, 0.8, 1]), np.array([1, 1, 1, 1])),
                 'light_dir': (np.array([0, -20, 0]), np.array([180, -20, 0]), np.array([0, -90, 0])),
-                'obj_id': [0, 1],
-                'obj_pos_x': [-15, 15],
-                'obj_pos_y': [15, -15],
-                'obj_pos_z': [0, 0],
-                'obj_mag': [2.5, 7],
-                'obj_rot': [45, 45],
-                'obj_tilt': [0, 0],
-                'obj_yaw': [0, 0],
-                'obj_dur': [10000, 10000],
-                'obj_delay': [0, 1],
+                 'obj_id': 4, #0, 1
+                'obj_pos_x': -15,
+                'obj_pos_y': 15,
+                'obj_pos_z': 0,
+                'obj_mag': 2.5,
+                'obj_rot': 45,
+                'obj_tilt': 0,
+                'obj_yaw': 0,
+                 'obj_dur': 10000,
+                'obj_delay': 0,
                 'movie_id' : 0,
-                'movie_name' : "Never on Sunday (1960) SDTV GreekDiamond XviD MP3.AVI",
+                'my_movie_name' : "Never on Sunday (1960) SDTV GreekDiamond XviD MP3.AVI",
                 'plane_id': 0,
                 'plane_pos_x': 0,
                 'plane_pos_y': 0,
@@ -112,11 +113,13 @@ conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                 'plane_mag': 4,
                 'plane_rot': 0,
                 'plane_tilt': 0,
-                'plane_yaw': 0
+                'plane_yaw': 0,
+                'fr_movie_name' : 'MadMax'
                                 })
 
-
-
+Panda.object_files['plane'] = "models/plane/plane"
 # run experiments
 exp.push_conditions(conditions)
 exp.start()
+if Panda.win is None or Panda.win.getGsg() is None:
+    exit(0)

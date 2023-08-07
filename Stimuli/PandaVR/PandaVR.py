@@ -3,6 +3,7 @@ import os
 import time
 import numpy as np
 from direct.showbase.ShowBase import ShowBase
+from direct.task import Task #it's being used
 import panda3d.core as core
 from utils.Timer import *
 from utils.helper_functions import *
@@ -12,6 +13,7 @@ from Stimuli.PandaVR.Movie import Movie
 from Stimuli.PandaVR.Collision import Collision
 from Stimuli.PandaVR.Plane import Plane
 # from PandaVR.pandaVR_helper_functions import *
+
    
 @stimulus.schema
 class Objects(dj.Lookup):
@@ -121,13 +123,12 @@ class Panda(Stimulus, dj.Manual):
             self.movie_path = os.path.dirname(os.path.abspath(__file__)) + '/movies/'
         ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
 
-
     def setup(self):
         self.props = core.WindowProperties()
-        self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
-        self.props.setFullscreen(self.Fullscreen)
-        self.props.setCursorHidden(True)
-        self.props.setUndecorated(True)
+        # self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
+        # self.props.setFullscreen(self.Fullscreen)
+        # self.props.setCursorHidden(True)
+        # self.props.setUndecorated(True)
         self.win.requestProperties(self.props)
         self.graphicsEngine.openWindows()
         self.set_background_color(0, 0, 0)
@@ -233,10 +234,10 @@ class Panda(Stimulus, dj.Manual):
             obj.remove(obj.task)
         for idx, light in self.lights.items():
             self.render.clearLight(self.lightsNP[idx])
-        if self.movie:
+        if self.movie_exists:
             self.mov_texture.stop()
             self.movie_node.removeNode()
-            self.movie = False
+            self.movie_exists = False
         self.render.clearLight
 
         self.flip(2) # clear double buffer
@@ -267,8 +268,8 @@ class Panda(Stimulus, dj.Manual):
         self.destroy()
 
     def make_conditions(self, conditions):
+        
         conditions = super().make_conditions(conditions)
-
         # store local copy of files
         if not os.path.isdir(self.path):  # create path if necessary
             os.makedirs(self.path)
@@ -282,6 +283,7 @@ class Panda(Stimulus, dj.Manual):
                     clip[0].tofile(filename)
             if not 'obj_id' in cond: continue
             for obj_id in iterable(cond['obj_id']):
+                print(obj_id)
                 object_info = (Objects() & ('obj_id=%d' % obj_id)).fetch1()
                 filename = self.path + object_info['file_name']
                 self.object_files[obj_id] = filename

@@ -5,9 +5,10 @@ from utils.helper_functions import *
 
 class Collision(ShowBase):
     
-    def __init__(self, base_class, model, is_camera = False, show = False): 
+    show = False
+    
+    def __init__(self, base_class, model, is_camera = False): 
         
-        self.show = show
         self.env = base_class
         self.model = model
         self.is_camera = is_camera
