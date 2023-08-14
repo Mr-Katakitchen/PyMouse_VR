@@ -43,7 +43,7 @@ class DummyBall(Interface, ShowBase):
         self.accept("arrow_down-up", self.setKey, ["arrow_down", False])
         
         self.accept("space", self.in_position, ["proximity_true"])
-        self.accept("space_up", self.in_position, ["proximity_false"])
+        self.accept("space-up", self.in_position, ["proximity_false"])
         self.accept("d", self.in_position, ["right_port"])
         self.accept("a", self.in_position, ["left_port"])
         
@@ -168,7 +168,6 @@ class DummyBall(Interface, ShowBase):
             self.position_tmst = self.beh.log_activity({**self.position.__dict__, 'in_position': self.ready})
             print('in position')
         elif event == 'proximity_false' and self.ready:
-            print("!!!")
             self.ready = False
             port = 0
             tmst = self.beh.log_activity({**self.position.__dict__, 'in_position': self.ready})
