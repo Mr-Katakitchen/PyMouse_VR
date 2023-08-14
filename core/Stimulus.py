@@ -138,8 +138,6 @@ class Stimulus:
         for cond in conditions:
             assert np.all([field in cond for field in self.required_fields])
             cond.update({**self.default_key, **cond})
-        print('\n')
-        # print(conditions)
 
         conditions = self.exp.log_conditions(conditions, schema='stimulus', hsh='stim_hash',
                                        condition_tables=['StimCondition'] + self.cond_tables)

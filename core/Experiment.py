@@ -45,7 +45,6 @@ class ExperimentClass:
         # # # # Main state loop # # # # #
         def run(self):
             while self.futureState != self.exitState:
-                print("futState:", self.futureState) 
                 if self.currentState != self.futureState:
                     self.currentState.exit()  #somewhere around here
                     self.currentState = self.futureState
@@ -76,9 +75,7 @@ class ExperimentClass:
         states = dict()
         for state in self.__class__.__subclasses__():  # Initialize states
             states.update({state().__class__.__name__: state(self)})
-            print(state)
         state_control = self.StateMachine(states)
-        print(state_control)
         self.interface.set_running_state(True)
         state_control.run()
 
@@ -107,20 +104,15 @@ class ExperimentClass:
         return self.quit
 
     def make_conditions(self, stim_class, conditions, stim_periods=None): 
-        print("den einai kan pontiki")  
-        print('\n', factorize(conditions), '\n', conditions, '\n')   
         stim_name = stim_class.__class__.__name__
-        print(stim_name, '\n', stim_class)
         if stim_name not in self.stims:
             stim_class.init(self)
             self.stims[stim_name] = stim_class
         conditions.update({'stimulus_class': stim_name})
-        print("->", stim_periods)
         if not stim_periods:
             conditions = self.stims[stim_name].make_conditions(factorize(conditions))  
         else:
             cond = {}
-            print(1)
             for i in range(len(stim_periods)):
                 cond[stim_periods[i]] = self.stims[stim_name].make_conditions(conditions=factorize(conditions[stim_periods[i]]))
                 conditions[stim_periods[i]] = []
@@ -174,7 +166,6 @@ class ExperimentClass:
     def name(self): return type(self).__name__
 
     def log_conditions(self, conditions, condition_tables=['Condition'], schema='experiment', hsh='cond_hash', priority=2):
-        # print(conditions)
         fields_key, hash_dict = list(), dict()
         for ctable in condition_tables:
             table = rgetattr(eval(schema), ctable)
@@ -182,7 +173,6 @@ class ExperimentClass:
         x = 0
         for cond in conditions:
             x += 1
-            print(x)
             insert_priority = priority
             key = {sel_key: cond[sel_key] for sel_key in fields_key if sel_key != hsh and sel_key in cond}  # find all dependant fields and generate hash
             cond.update({hsh: make_hash(key)})

@@ -113,7 +113,6 @@ class Panda(Stimulus, dj.Manual):
             self.movie_path = os.path.dirname(os.path.abspath(__file__)) + '/movies/'
         ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
 
-
     def setup(self):
         self.props = core.WindowProperties()
         self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())

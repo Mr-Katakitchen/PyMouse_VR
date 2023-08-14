@@ -1,5 +1,5 @@
 from Experiments.Navigate import *
-from Behaviors.DummyBall import *
+from Behaviors.VRBall import *
 from Stimuli.PandaVR.PandaVR import *
 
 
@@ -12,12 +12,12 @@ session_params = {
     'bias_window'            : 5,
     'stair_up'               : 0.8,
     'stair_down'             : 0.5,
-    'setup_conf_idx'         : 0,
+    'setup_conf_idx'         : 12,
 }
 
 
 exp = Experiment()
-exp.setup(logger, DummyBall, session_params)
+exp.setup(logger, VRBall, session_params)
 conditions = []
 
 non_resp = .1
@@ -27,7 +27,7 @@ radius = 2**.5*(scale/2) - non_resp
 def_key = {
         'x_sz'                  : scale,
         'y_sz'                  : scale,
-        'trial_duration'        : 6000,
+        'trial_duration'        : 60000,
         'response_loc_x'        : (0, scale, scale, 0),
         'response_loc_y'        : (0, 0, scale, scale),
         'odor_x'                : (0, scale, scale, 0),
@@ -74,10 +74,9 @@ panda_conditions = {
 
 conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                               'difficulty'         : 0,
-                              'trial_duration'     : 800000,
                               'x_sz'               : scale*10,
                               'y_sz'               : scale*10,
-                              'reward_loc_x'       : scale/2*10,
+                              'reward_loc_x'       : scale/2*10, 
                               'reward_loc_y'       : scale*24.85,
                               'response_loc_x'     : (scale/2*10,),
                               'response_loc_y'     : (-scale/2*29.15,),
@@ -95,14 +94,14 @@ conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                 'light_color': (np.array([0.8, 0.8, 0.8, 1]), np.array([0.8, 0.8, 0.8, 1]), np.array([1, 1, 1, 1])),
                 'light_dir': (np.array([0, -20, 0]), np.array([180, -20, 0]), np.array([0, -90, 0])),
                  'obj_id': 4, #0, 1
-                'obj_pos_x': -15,
-                'obj_pos_y': 15,
+                'obj_pos_x': -18,
+                'obj_pos_y': 18,
                 'obj_pos_z': 0,
-                'obj_mag': 2.5,
+                'obj_mag': 4,
                 'obj_rot': 45,
                 'obj_tilt': 0,
                 'obj_yaw': 0,
-                 'obj_dur': 10000,
+                 'obj_dur': 100000,
                 'obj_delay': 0,
                 'movie_id' : 0,
                 'my_movie_name' : "Never on Sunday (1960) SDTV GreekDiamond XviD MP3.AVI",
@@ -121,5 +120,3 @@ Panda.object_files['plane'] = "models/plane/plane"
 # run experiments
 exp.push_conditions(conditions)
 exp.start()
-if Panda.win is None or Panda.win.getGsg() is None:
-    exit(0)

@@ -5,8 +5,8 @@ from direct.showbase.ShowBase import ShowBase
 
 # @behavior.schema
 class DummyBall(Behavior, ShowBase, dj.Manual):
-    update_location, keymap, = True, {}
-    camera_node = None
+    update_location = True
+    current_position = []
     keyMap = {"w" : False, 
                 "s" : False, 
                 "a" : False, 
@@ -85,37 +85,24 @@ class DummyBall(Behavior, ShowBase, dj.Manual):
     def prepare(self, condition):
         self.in_position_flag = False
         if condition['x0'] < 0 or condition['y0'] < 0:
-            x0, y0, theta0, time = self.getPosition()
-            self.setPosition(condition['x_sz'], condition['y_sz'], x0, y0, theta0)
+            x0, y0  = self.getPosition()
+            self.setPosition(x0, y0)
         else:
-            self.setPosition(condition['x_sz'], condition['y_sz'], condition['x0'], condition['y0'],
-                                condition['theta0'])
+            self.setPosition(condition['x0'], condition['y0'])
+        self.current_position = [condition['x0'], condition['y0']]
         super().prepare(condition)
         
-    def setPosition(self, xmx=1, ymx=1, x0=0, y0=0, theta0=0):
-        self.loc_x = x0
-        self.loc_y = y0
-        self.theta = theta0
-        self.xmx = xmx
-        self.ymx = ymx
+    def setPosition(self, x0=0, y0=0):
+        self.current_position = [x0, y0]
         
     def getPosition(self):
-        print(self.loc_x, self.loc_y, self.theta,  self.timestamp)
-        return self.loc_x, self.loc_y, self.theta,  self.timestamp
+        return self.current_position[0], self.current_position[1]
 
     def getSpeed(self):
         return 0
 
-    def cleanup(self):
-        try:
-            self.thread_end.set()
-            self.mouse1.close()
-            self.mouse2.close()
-        except:
-            print('ball not running')
-
     def is_ready(self):
-        x, y, theta, tmst = self.get_position()
+        x, y = self.getPosition()
         in_position = False
         for r_x, r_y in zip(self.curr_cond['response_loc_x'], self.curr_cond['response_loc_y']):
             in_position = in_position or np.sum((np.array([r_x, r_y]) - [x, y]) ** 2) ** .5 < self.curr_cond['radius']
@@ -125,7 +112,7 @@ class DummyBall(Behavior, ShowBase, dj.Manual):
         return self.getSpeed() > self.curr_cond['speed_thr']
 
     def is_in_correct_loc(self):
-        x, y, theta, tmst = self.get_position()
+        x, y = self.getPosition()
         if self.curr_cond['reward_loc_x'] < 0 or self.curr_cond['reward_loc_y'] < 0: # cor location is any other
             resp_locs = np.array([self.curr_cond['response_loc_x'], self.curr_cond['response_loc_y']]).T
             cor_locs = resp_locs[[np.any(loc != self.previous_loc) for loc in resp_locs]]
@@ -137,8 +124,6 @@ class DummyBall(Behavior, ShowBase, dj.Manual):
         self.curr_loc = cor_locs[np.argmin(dist_to_loc)]
         return in_position
 
-    def get_position(self):
-        return 5, 5, 0, 0 #fix it
 
     def reward(self):
         self.interface.give_liquid(self.response.port)
@@ -150,52 +135,11 @@ class DummyBall(Behavior, ShowBase, dj.Manual):
         self.update_history(self.response.port, punish=True)
 
     def exit(self):
-        super().exit()
-        self.cleanup()
-        self.interface.cleanup()
-            
-     
-    def setKey(self, key, value):
-        self.keyMap[key] = value
-            
-        # self.env.taskMgr.add(self.keep_me_grounded, "Keep z position at level")
+        super().exit()   
+        return self.current_position[0], self.current_position[1]
         
-    def camera_positioning(self, camera_node, dt):
-        
-        # if(dt > .02):
-        #     return task.cont
-            
-        moving_speed = 15.0
-         
-        move_direction = Vec3(0)
-        if self.keyMap["w"]:
-            move_direction += Vec3(0, 1, 0)  # Move forward
-        if self.keyMap["s"]:
-            move_direction += Vec3(0, -1, 0)  # Move backward
-        if self.keyMap["a"]:
-            move_direction += Vec3(-1, 0, 0)  # Move left
-        if self.keyMap["d"]:
-            move_direction += Vec3(1, 0, 0)  # Move right
-            
-        if move_direction.length() > 0:
-            move_direction.normalize()
-            
-        camera_node.setPos(camera_node, move_direction * moving_speed * dt)  
-            
-        if(self.keyMap["arrow_right"] == True):
-            camera_node.setH(camera_node, -70 * dt)
-        if(self.keyMap["arrow_left"] == True):
-            camera_node.setH(camera_node, 70 * dt)
-        if(self.keyMap["arrow_up"] == True):
-            camera_node.setP(camera_node, 10 * dt)
-        if(self.keyMap["arrow_down"] == True):
-            camera_node.setP(camera_node, -10 * dt)
-
     
-    def keep_me_grounded(self, task):
-        self.env.self.camera_node.setR(0)
-        self.env.self.camera_node.setZ(0)
-        return task.cont
+
         
         
     

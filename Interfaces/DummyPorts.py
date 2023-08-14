@@ -47,7 +47,7 @@ class DummyPorts(Interface):
             self.beh.log_activity(self.position.__dict__)
         return port
 
-    def _proximity_change(self, event,port):
+    def _proximity_change(self, event, port):
         if self.dummy_ports_true(event, 'proximity_true') and not self.ready:
             self.timer_ready.start() 
             self.ready = True
@@ -55,7 +55,7 @@ class DummyPorts(Interface):
             self.position = self.ports[Port(type='Proximity', port=port) == self.ports][0]
             self.position_tmst = self.beh.log_activity({**self.position.__dict__, 'in_position': self.ready})
             print('in position')
-        elif self.dummy_ports_true(event, 'proximity_false') and self.ready:
+        elif self.dummy_ports_true(event, 'proximity_false') : #and self.ready:
             self.ready = False
             port = 0
             tmst = self.beh.log_activity({**self.position.__dict__, 'in_position': self.ready})

@@ -60,7 +60,7 @@ class Collision(ShowBase):
         
         center = (0,0,0)
         if self.is_camera:
-            radius = 0.5
+            radius = 0.2
         else:
             bounds = self.model.getChild(0).getBounds()
             center = bounds.getCenter()

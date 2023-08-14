@@ -90,7 +90,7 @@ class Trial(Experiment):
         if is_in_correct_loc and not self.is_in_correct_loc:
             self.stim.ready_stim()
         self.is_in_correct_loc = is_in_correct_loc
-        time.sleep(.1)
+        # time.sleep(.1)
 
     def next(self):
         if self.response and self.is_in_correct_loc and not self.beh.is_running():  # correct response

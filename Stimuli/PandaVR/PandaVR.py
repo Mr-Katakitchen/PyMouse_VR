@@ -104,9 +104,11 @@ class Panda(Stimulus, dj.Manual):
 
     object_files = dict()
     objects = dict()
+    camera_class = None
         
     def init(self, exp):
         super().init(exp)
+        self.exp = exp
         cls = self.__class__
         self.__class__ = cls.__class__(cls.__name__ + "ShowBase", (cls, ShowBase), {})
         if self.logger.is_pi:
@@ -122,6 +124,13 @@ class Panda(Stimulus, dj.Manual):
             self.path = '\\Stimuli\\objects\\'  # default path to copy local stimuli
             self.movie_path = os.path.dirname(os.path.abspath(__file__)) + '/movies/'
         ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
+        
+        self.monitor['punish_color'] = (240/255, 16/255, 16/255)
+        self.monitor['reward_color'] = (12/255, 220/255, 41/255)
+        self.monitor['ready_color'] = (18/255, 167/255, 219/255)
+        self.monitor['start_color'] = (229/255, 85/255, 234/255)
+        
+        
 
     def setup(self):
         self.props = core.WindowProperties()
@@ -131,7 +140,6 @@ class Panda(Stimulus, dj.Manual):
         # self.props.setUndecorated(True)
         self.win.requestProperties(self.props)
         self.graphicsEngine.openWindows()
-        self.set_background_color(0, 0, 0)
         # self.disableMouse()
         self.isrunning = False
         self.movie_exists = False
@@ -149,6 +157,7 @@ class Panda(Stimulus, dj.Manual):
 
     def prepare(self, curr_cond, stim_period=''):
         
+        print("reward loc x,y, response loc x,y", curr_cond['reward_loc_x'], curr_cond['reward_loc_y'], curr_cond['response_loc_x'], curr_cond['response_loc_y'])
         self.flag_no_stim = False
         if stim_period == '':
             self.curr_cond = curr_cond
@@ -202,10 +211,7 @@ class Panda(Stimulus, dj.Manual):
         # self.cHandler = CollisionHandlerEvent()
         # self.cHandler.addInPattern('into-%in')
         # self.cHandler.addOutPattern('outof-%in')
-        
-        # Set Main Camera  
-        Camera(self)
-        
+             
     def start(self):
         if self.flag_no_stim: return
 
@@ -218,6 +224,9 @@ class Panda(Stimulus, dj.Manual):
         for idx, obj in enumerate(iterable(self.curr_cond['obj_id'])):
             self.objects[idx].load() #loads the models with the Agent class
         self.flip(2)
+        
+        # Set Main Camera  
+        self.camera_class = Camera(self)
 
     def present(self):
         self.flip()
@@ -231,7 +240,8 @@ class Panda(Stimulus, dj.Manual):
     def stop(self):
         if self.flag_no_stim: return
         for idx, obj in self.objects.items():
-            obj.remove(obj.task)
+            obj.remove()
+            self.camera_class.remove()
         for idx, light in self.lights.items():
             self.render.clearLight(self.lightsNP[idx])
         if self.movie_exists:
@@ -283,7 +293,7 @@ class Panda(Stimulus, dj.Manual):
                     clip[0].tofile(filename)
             if not 'obj_id' in cond: continue
             for obj_id in iterable(cond['obj_id']):
-                print(obj_id)
+                print("Object   :   ",obj_id)
                 object_info = (Objects() & ('obj_id=%d' % obj_id)).fetch1()
                 filename = self.path + object_info['file_name']
                 self.object_files[obj_id] = filename
