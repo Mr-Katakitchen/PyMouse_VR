@@ -3,7 +3,7 @@ import os
 import time
 import numpy as np
 from direct.showbase.ShowBase import ShowBase
-from direct.task import Task #it's being used
+from direct.task import Task 
 import panda3d.core as core
 from utils.Timer import *
 from utils.helper_functions import *
@@ -12,7 +12,6 @@ from Stimuli.PandaVR.Camera import Camera
 from Stimuli.PandaVR.Movie import Movie
 from Stimuli.PandaVR.Collision import Collision
 from Stimuli.PandaVR.Plane import Plane
-# from PandaVR.pandaVR_helper_functions import *
 
    
 @stimulus.schema
@@ -105,6 +104,7 @@ class Panda(Stimulus, dj.Manual):
     object_files = dict()
     objects = dict()
     camera_class = None
+    plane_bounds_have_been_printed = False
         
     def init(self, exp):
         super().init(exp)
@@ -121,7 +121,7 @@ class Panda(Stimulus, dj.Manual):
             self.fStartDirect = False
             self.windowType = 'onscreen'
             self.Fullscreen = False
-            self.path = '\\Stimuli\\objects\\'  # default path to copy local stimuli
+            self.path = os.path.dirname(os.path.abspath(__file__)) + '/objects/'  # default path to copy local stimuli
             self.movie_path = os.path.dirname(os.path.abspath(__file__)) + '/movies/'
         ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
         
@@ -130,17 +130,21 @@ class Panda(Stimulus, dj.Manual):
         self.monitor['ready_color'] = (18/255, 167/255, 219/255)
         self.monitor['start_color'] = (229/255, 85/255, 234/255)
         
-        
+        self.accept('escape', self.close_window)
+
+    def close_window(self):
+        self.userExit()
+        exit(0)
 
     def setup(self):
         self.props = core.WindowProperties()
-        # self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
-        # self.props.setFullscreen(self.Fullscreen)
-        # self.props.setCursorHidden(True)
-        # self.props.setUndecorated(True)
+        self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
+        self.props.setFullscreen(self.Fullscreen)
+        self.props.setCursorHidden(True)
+        self.props.setUndecorated(True)
         self.win.requestProperties(self.props)
         self.graphicsEngine.openWindows()
-        # self.disableMouse()
+        self.disableMouse()
         self.isrunning = False
         self.movie_exists = False
 
@@ -149,15 +153,13 @@ class Panda(Stimulus, dj.Manual):
         #print(info.getDisplayModeWidth(0), info.getDisplayModeHeight(0))
         #print(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
 
-        # Create Ambient Light
+        # # Create Ambient Light
         # self.ambientLight = core.AmbientLight('ambientLight')
         # self.ambientLightNP = self.render.attachNewNode(self.ambientLight)
         # self.render.setLight(self.ambientLightNP)
-        # self.set_taskMgr()
 
     def prepare(self, curr_cond, stim_period=''):
         
-        print("reward loc x,y, response loc x,y", curr_cond['reward_loc_x'], curr_cond['reward_loc_y'], curr_cond['response_loc_x'], curr_cond['response_loc_y'])
         self.flag_no_stim = False
         if stim_period == '':
             self.curr_cond = curr_cond
@@ -189,12 +191,15 @@ class Panda(Stimulus, dj.Manual):
             self.lights[idx].setColor(tuple(self.curr_cond['light_color'][idx]))
             self.lightsNP[idx].setHpr(*self.curr_cond['light_dir'][idx])
     
+    
         #Load Environment Plane
         self.plane = Plane(self, get_cond(self.curr_cond, 'plane_'))
         self.plane_bound_coor = self.plane.get_plane_bounds()
-    
+        # if self.plane_bounds_have_been_printed ==  False : print(self.plane_bound_coor) #print plane bounds so that you know where to put objects
+        self.plane_bounds_have_been_printed = True
+        
+        
         # Set Object tasks
-        self.plane_has_been_set = False #So that objects will be placed after the environment plane has been set
         for idx, obj in enumerate(iterable(self.curr_cond['obj_id'])):
             self.objects[idx] = Agent(self, get_cond(self.curr_cond, 'obj_', idx), self.plane_bound_coor)
 
@@ -297,7 +302,9 @@ class Panda(Stimulus, dj.Manual):
                 object_info = (Objects() & ('obj_id=%d' % obj_id)).fetch1()
                 filename = self.path + object_info['file_name']
                 self.object_files[obj_id] = filename
-                if not os.path.isfile(filename): print('Saving %s' % filename); object_info['object'].tofile(filename)
+                if not os.path.isfile(filename): 
+                    print('Saving %s' % filename)
+                    object_info['object'].tofile(filename)
         return conditions
 
     def get_clip_info(self, key, *fields):

@@ -64,7 +64,7 @@ class Collision(ShowBase):
         else:
             bounds = self.model.getChild(0).getBounds()
             center = bounds.getCenter()
-            radius = bounds.getRadius() * 1.1        
+            radius = bounds.getRadius() * 0.8       
           
         colliderNode = CollisionNode("collision object")
         colliderNode.addSolid(CollisionSphere(center, 2 * radius))
@@ -76,8 +76,7 @@ class Collision(ShowBase):
             self.env.cTrav.addCollider(collider, self.env.pusher)  
             # self.accept("into-collision object", self.handle_collision)
             # self.accept("outo-collision object", self.handle_collision) 
-        
-        
+             
     # Handler Function that could possibly replace the default Pusher handler   
     def handle_collision(self, collEntry):
         print(self.model)

@@ -14,6 +14,7 @@ class DummyBall(Interface, ShowBase):
                 "arrow_up" : False,
                 "arrow_down" : False,
                 "space" : False}
+    mouse_is_moving = False
     
     current_position = [] #x, y, H (rotation)
     timestamp = 0
@@ -24,29 +25,24 @@ class DummyBall(Interface, ShowBase):
         Interface.__init__(self, **kwargs)
         self.setPosition()
       
-        self.accept("w", self.setKey, ["w", True])
-        self.accept("s", self.setKey, ["s", True])	
-        self.accept("a", self.setKey, ["a", True])	
-        self.accept("d", self.setKey, ["d", True])
         self.accept("arrow_right", self.setKey, ["arrow_right", True])
         self.accept("arrow_left", self.setKey, ["arrow_left", True])
         self.accept("arrow_up", self.setKey, ["arrow_up", True])
         self.accept("arrow_down", self.setKey, ["arrow_down", True])
+        # self.accept("arrow_up", self.is_moving, [self.mouse_is_moving, True])
+        # self.accept("arrow_down", self.is_moving, [self.mouse_is_moving, True])
 
-        self.accept("w-up", self.setKey, ["w", False])
-        self.accept("s-up", self.setKey, ["s", False])
-        self.accept("a-up", self.setKey, ["a", False])
-        self.accept("d-up", self.setKey, ["d", False])
         self.accept("arrow_right-up", self.setKey, ["arrow_right", False])
         self.accept("arrow_left-up", self.setKey, ["arrow_left", False])
         self.accept("arrow_up-up", self.setKey, ["arrow_up", False])
         self.accept("arrow_down-up", self.setKey, ["arrow_down", False])
+        # self.accept("arrow_up", self.is_moving, [self.mouse_is_moving, False])
+        # self.accept("arrow_down", self.is_moving, [self.mouse_is_moving, False])
         
         self.accept("space", self.in_position, ["proximity_true"])
         self.accept("space-up", self.in_position, ["proximity_false"])
         self.accept("d", self.in_position, ["right_port"])
-        self.accept("a", self.in_position, ["left_port"])
-        
+        self.accept("a", self.in_position, ["left_port"])  
     
     def setPosition(self, xmx=30, ymx=30, x0=0, y0=0, theta0=0):
         self.current_position = [x0, y0, theta0]
@@ -69,20 +65,29 @@ class DummyBall(Interface, ShowBase):
             
     def setKey(self, key, value):
         self.keyMap[key] = value
+        if key == "arrow_up" or key == "arrow_down":
+            if value == True:
+                self.mouse_is_moving = True
+            else:
+                self.mouse_is_moving = False
+    
+    def is_moving(self, mouse_is_moving, is_it_true):
+        mouse_is_moving = is_it_true
         
     def camera_positioning(self, camera_node, dt):
         
         moving_speed = 15.0
         turning_speed = 120.0
-         
+        turning_co = 0.5 if self.mouse_is_moving else 1 #So that the mouse moves more naturally
+        
         if self.keyMap["arrow_up"]:
             camera_node.setY(camera_node, 1 * moving_speed * dt) 
         if self.keyMap["arrow_down"]:
             camera_node.setY(camera_node, -1 * moving_speed * dt) 
         if self.keyMap["arrow_left"]:
-            camera_node.setH(camera_node, 1 * turning_speed * dt) 
+            camera_node.setH(camera_node, turning_co * turning_speed * dt) 
         if self.keyMap["arrow_right"]:
-            camera_node.setH(camera_node, -1 * turning_speed * dt) 
+            camera_node.setH(camera_node, -1 * turning_co * turning_speed * dt) 
                   
         self.current_position = camera_node.getPos()
             
