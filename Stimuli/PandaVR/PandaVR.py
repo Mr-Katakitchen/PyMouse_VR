@@ -218,6 +218,7 @@ class Panda(Stimulus, dj.Manual):
         # self.cHandler.addOutPattern('outof-%in')
              
     def start(self):
+        
         if self.flag_no_stim: return
 
         if not self.isrunning:
@@ -243,6 +244,7 @@ class Panda(Stimulus, dj.Manual):
             self.taskMgr.step()
 
     def stop(self):
+        self.exp.beh.interface.set_ready_to_false() #this exist so that space-up doesn't do anything after trial ends
         if self.flag_no_stim: return
         for idx, obj in self.objects.items():
             obj.remove()

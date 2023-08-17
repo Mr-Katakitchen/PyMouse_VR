@@ -29,16 +29,12 @@ class DummyBall(Interface, ShowBase):
         self.accept("arrow_left", self.setKey, ["arrow_left", True])
         self.accept("arrow_up", self.setKey, ["arrow_up", True])
         self.accept("arrow_down", self.setKey, ["arrow_down", True])
-        # self.accept("arrow_up", self.is_moving, [self.mouse_is_moving, True])
-        # self.accept("arrow_down", self.is_moving, [self.mouse_is_moving, True])
 
         self.accept("arrow_right-up", self.setKey, ["arrow_right", False])
         self.accept("arrow_left-up", self.setKey, ["arrow_left", False])
         self.accept("arrow_up-up", self.setKey, ["arrow_up", False])
         self.accept("arrow_down-up", self.setKey, ["arrow_down", False])
-        # self.accept("arrow_up", self.is_moving, [self.mouse_is_moving, False])
-        # self.accept("arrow_down", self.is_moving, [self.mouse_is_moving, False])
-        
+    
         self.accept("space", self.in_position, ["proximity_true"])
         self.accept("space-up", self.in_position, ["proximity_false"])
         self.accept("d", self.in_position, ["right_port"])
@@ -115,6 +111,9 @@ class DummyBall(Interface, ShowBase):
     def off_proximity(self):
         return self.position.type != 'Proximity'
         
+    def set_ready_to_false(self):
+        self.ready = False  
+        
     def _proximity_change(self, event, port):
         if self.dummy_ports_true(event, 'proximity_true') and not self.ready:
             self.timer_ready.start() 
@@ -164,19 +163,3 @@ class DummyBall(Interface, ShowBase):
             self.beh.log_activity(self.position.__dict__)
         return port
     
-    def _proximity_change(self, event, port):
-        if event == 'proximity_true' and not self.ready:
-            self.timer_ready.start() 
-            self.ready = True
-            port =3  
-            self.position = self.ports[Port(type='Proximity', port=port) == self.ports][0]
-            self.position_tmst = self.beh.log_activity({**self.position.__dict__, 'in_position': self.ready})
-            print('in position')
-        elif event == 'proximity_false' and self.ready:
-            self.ready = False
-            port = 0
-            tmst = self.beh.log_activity({**self.position.__dict__, 'in_position': self.ready})
-            self.position_dur = tmst - self.position_tmst
-            self.position = Port()
-            print('off position')
-            # print(pygame.mouse.get_pos())

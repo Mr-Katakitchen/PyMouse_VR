@@ -1,7 +1,6 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import NodePath, Vec3
 from Stimuli.PandaVR.Collision import Collision
-from Behaviors.DummyBall import DummyBall
 
 class Camera(ShowBase):
     
@@ -39,5 +38,6 @@ class Camera(ShowBase):
         self.env.taskMgr.remove("Camera control")        
         self.env.taskMgr.remove("Stay on the ground")        
         self.alithino_pontiki.removeNode()
+        
     
     
