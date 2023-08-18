@@ -34,7 +34,7 @@ class DummyBall(Interface, ShowBase):
         self.accept("arrow_left-up", self.setKey, ["arrow_left", False])
         self.accept("arrow_up-up", self.setKey, ["arrow_up", False])
         self.accept("arrow_down-up", self.setKey, ["arrow_down", False])
-    
+        
         self.accept("space", self.in_position, ["proximity_true"])
         self.accept("space-up", self.in_position, ["proximity_false"])
         self.accept("d", self.in_position, ["right_port"])
@@ -112,17 +112,17 @@ class DummyBall(Interface, ShowBase):
         return self.position.type != 'Proximity'
         
     def set_ready_to_false(self):
-        self.ready = False  
+        self.ready = False  #gets called when new trial starts, so that spacebar-activation resets
         
     def _proximity_change(self, event, port):
-        if self.dummy_ports_true(event, 'proximity_true') and not self.ready:
+        if event == 'proximity_true' and not self.ready:
             self.timer_ready.start() 
             self.ready = True
             port =3  
             self.position = self.ports[Port(type='Proximity', port=port) == self.ports][0]
             self.position_tmst = self.beh.log_activity({**self.position.__dict__, 'in_position': self.ready})
             print('in position')
-        elif self.dummy_ports_true(event, 'proximity_false') and self.ready:
+        elif event == 'proximity_false' and self.ready:
             self.ready = False
             port = 0
             tmst = self.beh.log_activity({**self.position.__dict__, 'in_position': self.ready})
@@ -163,3 +163,4 @@ class DummyBall(Interface, ShowBase):
             self.beh.log_activity(self.position.__dict__)
         return port
     
+

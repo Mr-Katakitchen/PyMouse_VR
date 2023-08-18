@@ -131,20 +131,26 @@ class Panda(Stimulus, dj.Manual):
         self.monitor['start_color'] = (229/255, 85/255, 234/255)
         
         self.accept('escape', self.close_window)
-
-    def close_window(self):
-        self.userExit()
-        exit(0)
+        
+        # self.lights = dict()  
+        # self.lightsNP = dict()
+        # print(self.curr_cond['light_idx'])
+        # for idx, light_idx in enumerate(iterable(self.curr_cond['light_idx'])): 
+        #     self.lights[idx] = core.DirectionalLight('directionalLight_%d' % idx)
+        #     self.lightsNP[idx] = render.attachNewNode(self.lights[idx])
+        #     render.setLight(self.lightsNP[idx])
+        #     self.lights[idx].setColor(tuple(self.curr_cond['light_color'][idx]))
+        #     self.lightsNP[idx].setHpr(*self.curr_cond['light_dir'][idx])
 
     def setup(self):
         self.props = core.WindowProperties()
-        self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
-        self.props.setFullscreen(self.Fullscreen)
-        self.props.setCursorHidden(True)
-        self.props.setUndecorated(True)
+        # self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
+        # self.props.setFullscreen(self.Fullscreen)
+        # self.props.setCursorHidden(True)
+        # self.props.setUndecorated(True)
         self.win.requestProperties(self.props)
         self.graphicsEngine.openWindows()
-        self.disableMouse()
+        # self.disableMouse()
         self.isrunning = False
         self.movie_exists = False
 
@@ -152,11 +158,10 @@ class Panda(Stimulus, dj.Manual):
         #print(info.getTotalDisplayModes())
         #print(info.getDisplayModeWidth(0), info.getDisplayModeHeight(0))
         #print(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
-
-        # # Create Ambient Light
-        # self.ambientLight = core.AmbientLight('ambientLight')
-        # self.ambientLightNP = self.render.attachNewNode(self.ambientLight)
-        # self.render.setLight(self.ambientLightNP)
+        
+        self.ambientLight = core.AmbientLight('ambientLight')
+        self.ambientLightNP = self.render.attachNewNode(self.ambientLight)
+        self.render.setLight(self.ambientLightNP)
 
     def prepare(self, curr_cond, stim_period=''):
         
@@ -176,15 +181,14 @@ class Panda(Stimulus, dj.Manual):
         self.set_background_color(*self.background_color)
 
         # Set Ambient Light
-        self.ambientLight = core.AmbientLight('ambientLight')
-        self.ambientLightNP = self.render.attachNewNode(self.ambientLight)
-        self.render.setLight(self.ambientLightNP)
         self.ambientLight.setColor(self.curr_cond['ambient_color'])
 
         # Set Directional Light
         self.lights = dict()  
         self.lightsNP = dict()
-        for idx, light_idx in enumerate(iterable(self.curr_cond['light_idx'])): #used to be enumerate(iterable())
+        print(self.curr_cond['light_idx'])
+        for idx, light_idx in enumerate(iterable(self.curr_cond['light_idx'])): 
+            print(idx)
             self.lights[idx] = core.DirectionalLight('directionalLight_%d' % idx)
             self.lightsNP[idx] = render.attachNewNode(self.lights[idx])
             render.setLight(self.lightsNP[idx])
@@ -246,16 +250,35 @@ class Panda(Stimulus, dj.Manual):
     def stop(self):
         self.exp.beh.interface.set_ready_to_false() #this exist so that space-up doesn't do anything after trial ends
         if self.flag_no_stim: return
+        
         for idx, obj in self.objects.items():
             obj.remove()
             self.camera_class.remove()
+            
+       
         for idx, light in self.lights.items():
             self.render.clearLight(self.lightsNP[idx])
+            
         if self.movie_exists:
             self.mov_texture.stop()
             self.movie_node.removeNode()
             self.movie_exists = False
+         
+        lights = render.findAllMatches('**/+Light') 
+        # print(lights)
+        for light in lights:
+            light.removeNode()      
         self.render.clearLight
+        
+        lights = render.findAllMatches('**/+Light')
+        if lights.isEmpty():
+            print("No lights remaining in the scene.")
+        else:
+            print("Remaining lights in the scene:")
+            for light in lights:
+                light_type = light.node().getType().getName()
+                light_name = light.getName()
+                print(f"Light Type: {light_type}, Light Name: {light_name}")
 
         self.flip(2) # clear double buffer
         self.log_stop()

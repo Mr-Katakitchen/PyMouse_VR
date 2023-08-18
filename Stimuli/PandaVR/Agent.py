@@ -30,6 +30,7 @@ class Agent(ShowBase):
         model_path = Filename.fromOsSpecific(model_path).getFullpath()
         self.model = self.env.loader.loadModel(model_path)
         
+        print(get_bounds(self.model))
         positioning = self.object_positioning()
         
         self.model.reparentTo(self.env.render)
