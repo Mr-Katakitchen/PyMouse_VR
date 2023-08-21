@@ -125,11 +125,6 @@ class Panda(Stimulus, dj.Manual):
             self.movie_path = os.path.dirname(os.path.abspath(__file__)) + '/movies/'
         ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
         
-        self.monitor['punish_color'] = (240/255, 16/255, 16/255)
-        self.monitor['reward_color'] = (12/255, 220/255, 41/255)
-        self.monitor['ready_color'] = (18/255, 167/255, 219/255)
-        self.monitor['start_color'] = (229/255, 85/255, 234/255)
-        
         self.accept('escape', self.close_window)
         
         # self.lights = dict()  
@@ -188,7 +183,6 @@ class Panda(Stimulus, dj.Manual):
         self.lightsNP = dict()
         print(self.curr_cond['light_idx'])
         for idx, light_idx in enumerate(iterable(self.curr_cond['light_idx'])): 
-            print(idx)
             self.lights[idx] = core.DirectionalLight('directionalLight_%d' % idx)
             self.lightsNP[idx] = render.attachNewNode(self.lights[idx])
             render.setLight(self.lightsNP[idx])
@@ -199,7 +193,7 @@ class Panda(Stimulus, dj.Manual):
         #Load Environment Plane
         self.plane = Plane(self, get_cond(self.curr_cond, 'plane_'))
         self.plane_bound_coor = self.plane.get_plane_bounds()
-        # if self.plane_bounds_have_been_printed ==  False : print(self.plane_bound_coor) #print plane bounds so that you know where to put objects
+        if self.plane_bounds_have_been_printed ==  False : print(self.plane_bound_coor) #print plane bounds so that you know where to put objects
         self.plane_bounds_have_been_printed = True
         
         
@@ -248,7 +242,7 @@ class Panda(Stimulus, dj.Manual):
             self.taskMgr.step()
 
     def stop(self):
-        self.exp.beh.interface.set_ready_to_false() #this exist so that space-up doesn't do anything after trial ends
+        # self.exp.beh.interface.set_ready_to_false() #this exist so that space-up doesn't do anything after trial ends
         if self.flag_no_stim: return
         
         for idx, obj in self.objects.items():
@@ -270,15 +264,15 @@ class Panda(Stimulus, dj.Manual):
             light.removeNode()      
         self.render.clearLight
         
-        lights = render.findAllMatches('**/+Light')
-        if lights.isEmpty():
-            print("No lights remaining in the scene.")
-        else:
-            print("Remaining lights in the scene:")
-            for light in lights:
-                light_type = light.node().getType().getName()
-                light_name = light.getName()
-                print(f"Light Type: {light_type}, Light Name: {light_name}")
+        # lights = render.findAllMatches('**/+Light')
+        # if lights.isEmpty():
+        #     print("No lights remaining in the scene.")
+        # else:
+        #     print("Remaining lights in the scene:")
+        #     for light in lights:
+        #         light_type = light.node().getType().getName()
+        #         light_name = light.getName()
+        #         print(f"Light Type: {light_type}, Light Name: {light_name}")
 
         self.flip(2) # clear double buffer
         self.log_stop()

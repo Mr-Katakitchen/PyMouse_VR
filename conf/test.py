@@ -1,3 +1,4 @@
+# print("this one")
 from Experiments.Navigate import *
 from Behaviors.VRBall import *
 from Stimuli.PandaVR.PandaVR import *
@@ -25,11 +26,11 @@ scale = 2   #has to change every time the environment size changes - depending o
 radius = 2**.5*(scale/2) - non_resp #peripou riza 2
 
 def_key = {
-        'x_sz'                  : scale,
-        'y_sz'                  : scale,
+        'x_sz'                  : 18.8,
+        'y_sz'                  : 18.8,
         'trial_duration'        : 60000,
-        'response_loc_x'        : (-40, 40),
-        'response_loc_y'        : (-40, 40),
+        'response_loc_x'        : (-15, 15),
+        'response_loc_y'        : (-15, 15),
         'x0'                    : 0,
         'y0'                    : 0,
         'theta0'                : 0,
@@ -47,9 +48,9 @@ conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                 # 'light_idx': (1, 2, 3),
                 'light_color': (np.array([0.8, 0.8, 0.8, 1]), np.array([0.2, 0.2, 0.2, 1]), np.array([1, 1, 1, 1])),
                 'light_dir': (np.array([0, -20, 0]), np.array([180, -20, 0]), np.array([0, -90, 0])),
-                 'obj_id': (3, 4),
-                'obj_pos_x': (-50, 50), 'obj_pos_y': (-50, 50), 'obj_pos_z': 0,
-                'obj_mag': (0.5, 0.5), 
+                 'obj_id': (5, 6),
+                'obj_pos_x': (-15, 15), 'obj_pos_y': (-15, 15), 'obj_pos_z': 0,
+                'obj_mag': (0.2, 0.2), 
                 'obj_rot': 0, 'obj_tilt': 0, 'obj_yaw': 0,
                 'obj_dur': 1,
                 'obj_delay': 0,
@@ -58,7 +59,7 @@ conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                 'plane_pos_x': 0,
                 'plane_pos_y': 0,
                 'plane_pos_z': 0,
-                'plane_mag': 4,
+                'plane_mag': 1,
                 'plane_rot': 0,
                 'plane_tilt': 0,
                 'plane_yaw': 0,

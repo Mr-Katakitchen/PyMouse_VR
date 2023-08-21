@@ -1,5 +1,5 @@
 from core.Behavior import *
-from Interfaces.DummyBall import *
+from Interfaces.Ball import *
 
 
 @behavior.schema
@@ -48,14 +48,15 @@ class VRBall(Behavior, dj.Manual):
         self.previous_loc = [0, 0]
         self.curr_loc = [0, 0]
         super(VRBall, self).setup(exp)
+        self.vr = Ball(exp)
 
     def prepare(self, condition):
         self.in_position_flag = False
         if condition['x0'] < 0 or condition['y0'] < 0:
-            x0, y0, theta0, time = self.interface.getPosition()
-            self.interface.setPosition(condition['x_sz'], condition['y_sz'], x0, y0, theta0)
+            x0, y0, theta0, time = self.vr.getPosition()
+            self.vr.setPosition(condition['x_sz'], condition['y_sz'], x0, y0, theta0)
         else:
-            self.interface.setPosition(condition['x_sz'], condition['y_sz'], condition['x0'], condition['y0'],
+            self.vr.setPosition(condition['x_sz'], condition['y_sz'], condition['x0'], condition['y0'],
                                 condition['theta0'])
         super().prepare(condition)
 
@@ -67,7 +68,7 @@ class VRBall(Behavior, dj.Manual):
         return in_position
 
     def is_running(self):
-        return self.interface.getSpeed() > self.curr_cond['speed_thr']
+        return self.vr.getSpeed() > self.curr_cond['speed_thr']
 
     def is_in_correct_loc(self):
         x, y, theta, tmst = self.get_position()
@@ -83,8 +84,8 @@ class VRBall(Behavior, dj.Manual):
         return in_position
 
     def get_position(self):
-        return self.interface.getPosition()
-
+        return self.vr.getPosition()
+        
     def reward(self):
         self.interface.give_liquid(self.response.port)
         self.log_reward(self.reward_amount[self.response.port])
@@ -96,4 +97,5 @@ class VRBall(Behavior, dj.Manual):
 
     def exit(self):
         super().exit()
+        self.vr.cleanup()
         self.interface.cleanup()

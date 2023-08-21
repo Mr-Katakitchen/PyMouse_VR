@@ -15,6 +15,7 @@ class DummyBall(Interface, ShowBase):
                 "arrow_down" : False,
                 "space" : False}
     mouse_is_moving = False
+    moving_speed = 15
     
     current_position = [] #x, y, H (rotation)
     timestamp = 0
@@ -46,10 +47,14 @@ class DummyBall(Interface, ShowBase):
         self.ymx = ymx
 
     def getPosition(self):
-        return *self.current_position, self.timestamp
+        return self.current_position, self.timestamp
 
     def getSpeed(self):
-        return self.speed
+        if not self.keyMap["w"] and not self.keyMap["a"] and not self.keyMap["s"] and not self.keyMap["d"]: #not moving
+            speed = 0
+        else:
+            speed = self.moving_speed
+        return speed
 
     def cleanup(self):
         try:
@@ -72,14 +77,14 @@ class DummyBall(Interface, ShowBase):
         
     def camera_positioning(self, camera_node, dt):
         
-        moving_speed = 15.0
+        self.moving_speed = 15.0
         turning_speed = 120.0
         turning_co = 0.5 if self.mouse_is_moving else 1 #So that the mouse moves more naturally
         
         if self.keyMap["arrow_up"]:
-            camera_node.setY(camera_node, 1 * moving_speed * dt) 
+            camera_node.setY(camera_node, 1 * self.moving_speed * dt) 
         if self.keyMap["arrow_down"]:
-            camera_node.setY(camera_node, -1 * moving_speed * dt) 
+            camera_node.setY(camera_node, -1 * self.moving_speed * dt) 
         if self.keyMap["arrow_left"]:
             camera_node.setH(camera_node, turning_co * turning_speed * dt) 
         if self.keyMap["arrow_right"]:
@@ -88,13 +93,7 @@ class DummyBall(Interface, ShowBase):
         self.current_position = camera_node.getPos()
             
         self.current_position = [camera_node.getX(), camera_node.getY(), camera_node.getH() * 2 * np.pi / 360]
-        self.timestamp = dt
-        
-        if not self.keyMap["w"] and not self.keyMap["a"] and not self.keyMap["s"] and not self.keyMap["d"]: #not moving
-            self.speed = 0
-        else:
-            self.speed = moving_speed
-            
+        self.timestamp = dt         
          
     def load_calibration(self):
         pass

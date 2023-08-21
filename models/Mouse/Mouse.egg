@@ -1,6 +1,6 @@
 <CoordinateSystem> { y-up-left }
 
-<Texture> mouse_Material_#21_CL2 { "maps/mouse_Material_#21_CL2.tif"
+<Texture> mouse_Material_#21_CL2 { "maps/mouse_Material_#21_CL2.jpg"
 	<Scalar> format { rgb }
 	<Scalar> wrap { repeat }
 }

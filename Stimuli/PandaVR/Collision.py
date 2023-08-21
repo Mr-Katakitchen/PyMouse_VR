@@ -24,32 +24,32 @@ class Collision(ShowBase):
         if self.show: floor.show()
         
     def create_collision_walls(self, plane_boundries):
-        
+        wall_height = 3
         d = 0 #distance of the wall from the plane boundries
         self.point = plane_boundries
              
-        wallSolid = CollisionTube(self.point['x0'] + d, d, 0, self.point['x1'] - d, d, 0, 1.5)
+        wallSolid = CollisionTube(self.point['x0'] + d, d, 0, self.point['x1'] - d, d, 0, wall_height)
         wallNode = CollisionNode("wall")
         wallNode.addSolid(wallSolid)
         wall = self.env.render.attachNewNode(wallNode)
         wall.setY(self.point['y0'])
         if self.show: wall.show()
 
-        wallSolid = CollisionTube(self.point['x0'] + d, -d, 0, self.point['x1'] - d, -d, 0, 1.5)
+        wallSolid = CollisionTube(self.point['x0'] + d, -d, 0, self.point['x1'] - d, -d, 0, wall_height)
         wallNode = CollisionNode("wall")
         wallNode.addSolid(wallSolid)
         wall = self.env.render.attachNewNode(wallNode)
         wall.setY(self.point['y1'])
         if self.show: wall.show()
         
-        wallSolid = CollisionTube(d, self.point['y0'] + d, 0, d, self.point['y1'] - d, 0, 1.5)
+        wallSolid = CollisionTube(d, self.point['y0'] + d, 0, d, self.point['y1'] - d, 0, wall_height)
         wallNode = CollisionNode("wall")
         wallNode.addSolid(wallSolid)
         wall = self.env.render.attachNewNode(wallNode)
         wall.setX(self.point['x0'])
         if self.show: wall.show()
 
-        wallSolid = CollisionTube(-d, self.point['y0'] + d, 0, -d, self.point['y1'] - d, 0, 1.5)
+        wallSolid = CollisionTube(-d, self.point['y0'] + d, 0, -d, self.point['y1'] - d, 0, wall_height)
         wallNode = CollisionNode("wall")
         wallNode.addSolid(wallSolid)
         wall = self.env.render.attachNewNode(wallNode)

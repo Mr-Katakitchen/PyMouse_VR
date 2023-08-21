@@ -1,6 +1,7 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import NodePath, Vec3
 from Stimuli.PandaVR.Collision import Collision
+import numpy as np
 
 class Camera(ShowBase):
     
@@ -11,11 +12,11 @@ class Camera(ShowBase):
     def __init__(self, base_class):
         
         self.env = base_class
-        self.alithino_pontiki = self.env.loader.loadModel("Stimuli/objects/Mouse")
+        self.alithino_pontiki = NodePath("camera_node") #self.env.loader.loadModel("models/Mouse/Mouse")
         self.alithino_pontiki.reparentTo(self.env.render)
         self.alithino_pontiki.setPos(self.env.curr_cond['x0'], self.env.curr_cond['y0'], 0)
-        self.alithino_pontiki.getChild(0).setScale(1)
-        self.alithino_pontiki.getChild(0).setP(20)
+        # self.alithino_pontiki.getChild(0).setScale(1)
+        # self.alithino_pontiki.getChild(0).setP(20)
                                               
         Collision(self.env, self.alithino_pontiki, True).make_object_collidable()     
         
@@ -24,9 +25,13 @@ class Camera(ShowBase):
     
     def camera_control(self, task):
         dt = globalClock.getDt()
-        self.env.exp.beh.interface.camera_positioning(self.alithino_pontiki, dt)
-        self.env.camera.setPos(self.alithino_pontiki, 0, -10, 2.5)
-        self.env.camera.setHpr(self.alithino_pontiki, 0, -3, 0)
+        ball_pos = (self.env.exp.beh.get_position()[0] * 100, self.env.exp.beh.get_position()[1] * 100, 0)
+        ball_theta = self.env.exp.beh.get_position()[2] * 360 / np.pi 
+        self.alithino_pontiki.setPos(ball_pos) #self.env.exp.beh.vr.camera_positioning(self.alithino_pontiki, dt)
+        self.alithino_pontiki.setH(ball_theta)
+        print("position:  ",self.alithino_pontiki.getPos(), "   rotation:       ", self.alithino_pontiki.getHpr())
+        self.env.camera.setPos(self.alithino_pontiki, 0, 0, 0.3)
+        self.env.camera.setHpr(self.alithino_pontiki, 0, 0, 0)
         return task.cont
     
     def keep_me_grounded(self, task):
