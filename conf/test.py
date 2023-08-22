@@ -1,7 +1,7 @@
 # print("this one")
 from Experiments.Navigate import *
 from Behaviors.VRBall import *
-from Stimuli.PandaVR.PandaVR import *
+from Stimuli.PandaVR import *
 
 
 # define session parameters
@@ -13,7 +13,7 @@ session_params = {
     'bias_window'            : 5,
     'stair_up'               : 0.8,
     'stair_down'             : 0.5,
-    'setup_conf_idx'         : 12,
+    'setup_conf_idx'         : 3,
 }
 
 
@@ -33,7 +33,7 @@ def_key = {
         'response_loc_y'        : (-15, 15),
         'x0'                    : 0,
         'y0'                    : 0,
-        'theta0'                : 0,
+        'theta0'                : 90,
         'reward_loc_x'          : -1,
         'reward_loc_y'          : -1,
         'extiction_factor'      : 3,

@@ -1,6 +1,6 @@
 from Experiments.Navigate import *
 from Behaviors.VRBall import *
-from Stimuli.PandaVR.PandaVR import *
+from Stimuli.PandaVR import *
 
 
 # define session parameters

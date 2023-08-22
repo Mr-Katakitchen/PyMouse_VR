@@ -87,7 +87,7 @@ class DummyBall(Interface, ShowBase):
             camera_node.setH(camera_node, turning_co * turning_speed * dt) 
         if self.keyMap["arrow_right"]:
             camera_node.setH(camera_node, -1 * turning_co * turning_speed * dt) 
-                      
+                                        
         self.current_position = [camera_node.getX(), camera_node.getY(), camera_node.getH() * 2 * np.pi / 360]
         self.timestamp = dt   
         return self.current_position, self.timestamp         
