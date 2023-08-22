@@ -7,6 +7,7 @@ import panda3d.core as core
 from utils.Timer import *
 from utils.helper_functions import *
 from direct.interval.IntervalGlobal import *
+from direct.task import Task
    
 @stimulus.schema
 class Objects(dj.Lookup):
@@ -230,7 +231,7 @@ class Panda(Stimulus, dj.Manual):
 
     def flip(self, n=1):
         for i in range(0, n):
-            self.taskMgr.step()
+            taskMgr.step()
 
     def stop(self):
         if self.flag_no_stim: return

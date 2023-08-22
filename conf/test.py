@@ -13,7 +13,7 @@ session_params = {
     'bias_window'            : 5,
     'stair_up'               : 0.8,
     'stair_down'             : 0.5,
-    'setup_conf_idx'         : 3,
+    'setup_conf_idx'         : 12,
 }
 
 
