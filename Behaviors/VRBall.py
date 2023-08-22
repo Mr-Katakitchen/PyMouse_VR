@@ -1,5 +1,6 @@
 from core.Behavior import *
 from Interfaces.Ball import *
+from Interfaces.DummyBall import *
 
 
 @behavior.schema
@@ -48,7 +49,13 @@ class VRBall(Behavior, dj.Manual):
         self.previous_loc = [0, 0]
         self.curr_loc = [0, 0]
         super(VRBall, self).setup(exp)
-        self.vr = Ball(exp)
+        print("config id =                 ", exp.params['setup_conf_idx'])
+        if exp.params['setup_conf_idx'] == 3:
+            self.vr = Ball(exp)
+        elif exp.params['setup_conf_idx'] == 12:
+            self.vr = self.interface
+        else:
+            print("What is your interface???")
 
     def prepare(self, condition):
         self.in_position_flag = False

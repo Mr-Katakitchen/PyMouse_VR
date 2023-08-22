@@ -12,6 +12,9 @@ from Stimuli.PandaVR.Camera import Camera
 from Stimuli.PandaVR.Movie import Movie
 from Stimuli.PandaVR.Collision import Collision
 from Stimuli.PandaVR.Plane import Plane
+from direct.interval.IntervalGlobal import *
+from panda3d.core import CollisionSphere, CollisionNode
+
 
    
 @stimulus.schema
@@ -103,8 +106,7 @@ class Panda(Stimulus, dj.Manual):
 
     object_files = dict()
     objects = dict()
-    camera_class = None
-    plane_bounds_have_been_printed = False
+    show = True
         
     def init(self, exp):
         super().init(exp)
@@ -126,111 +128,99 @@ class Panda(Stimulus, dj.Manual):
         ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
         
         self.accept('escape', self.close_window)
-        
-        # self.lights = dict()  
-        # self.lightsNP = dict()
-        # print(self.curr_cond['light_idx'])
-        # for idx, light_idx in enumerate(iterable(self.curr_cond['light_idx'])): 
-        #     self.lights[idx] = core.DirectionalLight('directionalLight_%d' % idx)
-        #     self.lightsNP[idx] = render.attachNewNode(self.lights[idx])
-        #     render.setLight(self.lightsNP[idx])
-        #     self.lights[idx].setColor(tuple(self.curr_cond['light_color'][idx]))
-        #     self.lightsNP[idx].setHpr(*self.curr_cond['light_dir'][idx])
 
     def setup(self):
-        self.props = core.WindowProperties()
+        # self.props = core.WindowProperties()
         # self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
         # self.props.setFullscreen(self.Fullscreen)
         # self.props.setCursorHidden(True)
         # self.props.setUndecorated(True)
-        self.win.requestProperties(self.props)
-        self.graphicsEngine.openWindows()
-        # self.disableMouse()
+        # # self.win.requestProperties(self.props)
+        # self.graphicsEngine.openWindows()
+        # # self.disableMouse()
         self.isrunning = False
         self.movie_exists = False
 
-        #info = self.pipe.getDisplayInformation()
-        #print(info.getTotalDisplayModes())
-        #print(info.getDisplayModeWidth(0), info.getDisplayModeHeight(0))
-        #print(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
-        
+        # Set Ambient Light    
         self.ambientLight = core.AmbientLight('ambientLight')
         self.ambientLightNP = self.render.attachNewNode(self.ambientLight)
         self.render.setLight(self.ambientLightNP)
 
-    def prepare(self, curr_cond, stim_period=''):
+    def prepare(self, cond, stim_period=''):
         
         self.flag_no_stim = False
         if stim_period == '':
-            self.curr_cond = curr_cond
-        elif stim_period not in curr_cond:
+            self.curr_cond = cond
+        elif stim_period not in cond:
             self.flag_no_stim = True
             return
         else: 
-            self.curr_cond = curr_cond[stim_period]
+            self.curr_cond = cond[stim_period]
         
         self.period = stim_period
 
         # Set Background Color
-        self.background_color = self.curr_cond['background_color']
+        self.background_color = cond['background_color']
         self.set_background_color(*self.background_color)
 
         # Set Ambient Light
-        self.ambientLight.setColor(self.curr_cond['ambient_color'])
+        self.ambientLight.setColor(cond['ambient_color'])
 
         # Set Directional Light
         self.lights = dict()  
         self.lightsNP = dict()
-        print(self.curr_cond['light_idx'])
-        for idx, light_idx in enumerate(iterable(self.curr_cond['light_idx'])): 
+        for idx, light_idx in enumerate(iterable(cond['light_idx'])): 
             self.lights[idx] = core.DirectionalLight('directionalLight_%d' % idx)
             self.lightsNP[idx] = render.attachNewNode(self.lights[idx])
             render.setLight(self.lightsNP[idx])
-            self.lights[idx].setColor(tuple(self.curr_cond['light_color'][idx]))
-            self.lightsNP[idx].setHpr(*self.curr_cond['light_dir'][idx])
-    
-    
-        #Load Environment Plane
-        self.plane = Plane(self, get_cond(self.curr_cond, 'plane_'))
-        self.plane_bound_coor = self.plane.get_plane_bounds()
-        if self.plane_bounds_have_been_printed ==  False : print(self.plane_bound_coor) #print plane bounds so that you know where to put objects
-        self.plane_bounds_have_been_printed = True
-        
-        
-        # Set Object tasks
-        for idx, obj in enumerate(iterable(self.curr_cond['obj_id'])):
-            self.objects[idx] = Agent(self, get_cond(self.curr_cond, 'obj_', idx), self.plane_bound_coor)
+            self.lights[idx].setColor(tuple(cond['light_color'][idx]))
+            self.lightsNP[idx].setHpr(*cond['light_dir'][idx])      
 
         # Set Movie
-        if 'movie_name' in self.curr_cond:
-            file_name = get_cond(self.curr_cond, 'movie_')['name']
-            self.movie = Movie(self, file_name)
-            self.movie_exists = True            
+        if 'movie_name' in cond:
+            self.movie = True
+            loader = Loader(self)
+            file_name = self.get_clip_info(cond, 'file_name')
+            self.mov_texture = loader.loadTexture(self.movie_path + file_name[0])
+            cm = core.CardMaker("card")
+            tx_scale = self.mov_texture.getTexScale()
+            cm.setFrame(-1, 1, -tx_scale[1]/tx_scale[0], tx_scale[1]/tx_scale[0])
+            self.movie_node = core.NodePath(cm.generate())
+            self.movie_node.setTexture(self.mov_texture, 1)
+            self.movie_node.setPos(0, 100, 0)
+            self.movie_node.setTexScale(core.TextureStage.getDefault(), self.mov_texture.getTexScale())
+            self.movie_node.setScale(48)
+            self.movie_node.reparentTo(self.render)        
           
         # Set Collision Variables  
         self.cTrav = core.CollisionTraverser()
         self.pusher = core.CollisionHandlerPusher()
         self.pusher.setHorizontal(True)
-        # self.cHandler = CollisionHandlerEvent()
-        # self.cHandler.addInPattern('into-%in')
-        # self.cHandler.addOutPattern('outof-%in')
+        
+        #Set Camera
+        self.camera_node = core.NodePath("camera_node")
+        self.camera_node.setPos(cond['x0'], cond['y0'], 0)
+        self.camera_node2 = core.NodePath("camera_node")
+        self.camera_node2.setPos(cond['x0'], cond['y0'], 0)
+        taskMgr.add(self.camera_control, "Camera control")
+        taskMgr.add(self.keep_me_grounded, "Stay on the ground")
+        # self.camera_node.node().addSolid(CollisionSphere((0,0,0), 3))
+        if self.show: self.camera_node.show()
+        # collider = self.collision_sphere(self.camera_node, is_camera = True)
              
     def start(self):
-        
         if self.flag_no_stim: return
-
         if not self.isrunning:
             self.timer.start()
             self.isrunning = True
-    
         self.log_start()
         if self.movie_exists: self.movie.play()
-        for idx, obj in enumerate(iterable(self.curr_cond['obj_id'])):
-            self.objects[idx].load() #loads the models with the Agent class
-        self.flip(2)
         
-        # Set Main Camera  
-        self.camera_class = Camera(self)
+        # Set Objects
+        for idx, obj in enumerate(iterable(self.curr_cond['obj_id'])):
+            obj_cond = get_cond(self.curr_cond, 'obj_', idx)
+            self.objects[idx] = self.object_load(obj_cond) #this function returns a panda3d model          
+        self.flip(2)
 
     def present(self):
         self.flip()
@@ -246,34 +236,15 @@ class Panda(Stimulus, dj.Manual):
         if self.flag_no_stim: return
         
         for idx, obj in self.objects.items():
-            obj.remove()
-            self.camera_class.remove()
-            
-       
+            obj.removeNode()
+        self.camera_node.removeNode()     
         for idx, light in self.lights.items():
-            self.render.clearLight(self.lightsNP[idx])
-            
+            self.render.clearLight(self.lightsNP[idx])        
         if self.movie_exists:
             self.mov_texture.stop()
             self.movie_node.removeNode()
-            self.movie_exists = False
-         
-        lights = render.findAllMatches('**/+Light') 
-        # print(lights)
-        for light in lights:
-            light.removeNode()      
-        self.render.clearLight
-        
-        # lights = render.findAllMatches('**/+Light')
-        # if lights.isEmpty():
-        #     print("No lights remaining in the scene.")
-        # else:
-        #     print("Remaining lights in the scene:")
-        #     for light in lights:
-        #         light_type = light.node().getType().getName()
-        #         light_name = light.getName()
-        #         print(f"Light Type: {light_type}, Light Name: {light_name}")
-
+            self.movie_exists = False       
+       
         self.flip(2) # clear double buffer
         self.log_stop()
         self.isrunning = False
@@ -302,7 +273,6 @@ class Panda(Stimulus, dj.Manual):
         self.destroy()
 
     def make_conditions(self, conditions):
-        
         conditions = super().make_conditions(conditions)
         # store local copy of files
         if not os.path.isdir(self.path):  # create path if necessary
@@ -328,16 +298,60 @@ class Panda(Stimulus, dj.Manual):
 
     def get_clip_info(self, key, *fields):
         return self.logger.get(schema='stimulus', table='Movie.Clip', key=key, fields=fields)
+    
+    def object_load(self, cond): #cond = condition for current object id
+        model_path = self.object_files[cond['id']]
+        if self.exp.params['setup_conf_idx'] == 12:
+            model_path = core.Filename.fromOsSpecific(model_path).getFullpath() #Windows reads file paths differently
+        model = loader.loadModel(model_path)
+        model.setScale(cond['mag'])
+        model.setHpr(cond['rot'], cond['tilt'], cond['yaw'])
+        grounded_z = 0 - get_bounds(model)['z0'] #I do that so that the objects will always be right on top of the ground
+        model.setPos(cond['pos_x'], cond['pos_y'], grounded_z)
+        model.reparentTo(render)     
+        if not cond['is_plane']:
+            start_hpr = model.getHpr()        
+            hpr_interval1 = model.hprInterval(15, start_hpr + (360,0,0), start_hpr) #Set Interval for 360 rotation
+            Sequence(hpr_interval1).loop()
+            collider = self.collision_sphere(model)        #Create Collision Node that surrounds the object
+        return model
+        
+    def camera_control(self, task):
+        dt = globalClock.getDt()
+        # ball_pos = (self.exp.beh.get_position()[0] * 100, self.exp.beh.get_position()[1] * 100, 0) 
+        # # ball_theta = self.exp.beh.get_position()[2] * 360 / np.pi 
+        # self.camera_node.setPos(ball_pos) 
+        # self.camera_node.setH(ball_theta)
+        self.exp.beh.vr.camera_positioning(self.camera_node2, dt)
+        # print("position:  ",self.camera_node.getPos(), "   rotation:       ", self.camera_node.getHpr())
+        camera.setPos(self.camera_node2, 0, 0, 0.5)
+        camera.setHpr(self.camera_node2, 0, 0, 0)
+        return task.cont
+    
+    def keep_me_grounded(self, task):
+        self.camera_node.setR(0)
+        self.camera_node.setZ(0)
+        return task.cont
+    
+    def collision_sphere(self, model, is_camera = False):
+        if is_camera:
+            radius = 3
+        else:
+            bounds = model.getChild(0).getBounds()
+            radius = bounds.getRadius() * 0.8           
+        collision_object = CollisionNode("collision object")
+        collision_object.addSolid(CollisionSphere((0,0,0), radius))
+        collision_sphere = model.node().attachNewNode(collision_object)
+        if self.show: collision_sphere.show()
+        
+        # self.pusher.addCollider(collision_sphere, self.camera_node)
+        # self.cTrav.addCollider(collision_sphere, self.pusher) 
+        
+        return collision_sphere
 
-    def set_taskMgr(self):
-        """
-        Use this at the setup of pandas because for some reason the taskMgr the first time it 
-        doesn't work properly. It needs time sleep between steps or to run many steps
-        """
-        self.set_background_color((0,0,0))
-        for i in range(0, 2):
-            time.sleep(0.1)
-            self.taskMgr.step()
+     
+
+
 
 
 

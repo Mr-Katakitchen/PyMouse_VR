@@ -6,7 +6,7 @@ import numpy as np
 class Camera(ShowBase):
     
     interface = None
-    fixed_z = 0.5
+    fixed_z = 0.8
     fixed_R = 0
     
     def __init__(self, base_class):
@@ -30,7 +30,7 @@ class Camera(ShowBase):
         self.alithino_pontiki.setPos(ball_pos) #self.env.exp.beh.vr.camera_positioning(self.alithino_pontiki, dt)
         self.alithino_pontiki.setH(ball_theta)
         print("position:  ",self.alithino_pontiki.getPos(), "   rotation:       ", self.alithino_pontiki.getHpr())
-        self.env.camera.setPos(self.alithino_pontiki, 0, 0, 0.3)
+        self.env.camera.setPos(self.alithino_pontiki, 0, 0, 0.5)
         self.env.camera.setHpr(self.alithino_pontiki, 0, 0, 0)
         return task.cont
     

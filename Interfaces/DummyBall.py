@@ -42,12 +42,13 @@ class DummyBall(Interface, ShowBase):
         self.accept("a", self.in_position, ["left_port"])  
     
     def setPosition(self, xmx=30, ymx=30, x0=0, y0=0, theta0=0):
-        self.current_position = [x0, y0, theta0]
-        self.xmx = xmx
-        self.ymx = ymx
+        # self.current_position = [x0, y0, theta0]
+        # self.xmx = xmx
+        # self.ymx = ymx
+        pass
 
     def getPosition(self):
-        return self.current_position, self.timestamp
+        return *self.current_position, self.timestamp
 
     def getSpeed(self):
         if not self.keyMap["w"] and not self.keyMap["a"] and not self.keyMap["s"] and not self.keyMap["d"]: #not moving
@@ -71,9 +72,6 @@ class DummyBall(Interface, ShowBase):
                 self.mouse_is_moving = True
             else:
                 self.mouse_is_moving = False
-    
-    def is_moving(self, mouse_is_moving, is_it_true):
-        mouse_is_moving = is_it_true
         
     def camera_positioning(self, camera_node, dt):
         
@@ -89,11 +87,10 @@ class DummyBall(Interface, ShowBase):
             camera_node.setH(camera_node, turning_co * turning_speed * dt) 
         if self.keyMap["arrow_right"]:
             camera_node.setH(camera_node, -1 * turning_co * turning_speed * dt) 
-                  
-        self.current_position = camera_node.getPos()
-            
+                      
         self.current_position = [camera_node.getX(), camera_node.getY(), camera_node.getH() * 2 * np.pi / 360]
-        self.timestamp = dt         
+        self.timestamp = dt   
+        return self.current_position, self.timestamp         
          
     def load_calibration(self):
         pass
