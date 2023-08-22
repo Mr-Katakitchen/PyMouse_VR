@@ -64,7 +64,7 @@ conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                 'plane_rot': 0,
                 'plane_tilt': 0,
                 'plane_yaw': 0,
-                'fr_movie_name' : 'MadMax'
+                'movie_name' : 'MadMax'
                                 })
 
 Panda.object_files['plane'] = "models/plane/plane"

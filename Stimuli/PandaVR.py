@@ -288,7 +288,6 @@ class Panda(Stimulus, dj.Manual):
                     clip[0].tofile(filename)
             if not 'obj_id' in cond: continue
             for obj_id in iterable(cond['obj_id']):
-                print("Object   :   ",obj_id)
                 object_info = (Objects() & ('obj_id=%d' % obj_id)).fetch1()
                 filename = self.path + object_info['file_name']
                 self.object_files[obj_id] = filename
