@@ -17,7 +17,7 @@ class DummyBall(Interface, ShowBase):
     mouse_is_moving = False
     moving_speed = 15
     
-    current_position = [] #x, y, H (rotation)
+    current_position = [] #x, y, theta (rotation)
     timestamp = 0
     movement_log = []
     time_log = []
@@ -70,11 +70,13 @@ class DummyBall(Interface, ShowBase):
             else:
                 self.mouse_is_moving = False
         
-    def camera_positioning(self, camera_node, dt):
+    def camera_positioning(self, base_class):
         
+        camera_node = base_class.camera_node
         self.moving_speed = 15.0
         turning_speed = 120.0
         turning_co = 0.5 if self.mouse_is_moving else 1 #So that the mouse moves more naturally
+        dt = globalClock.getDt() # Time since the last frame was drawn in the active ShowBase window
         
         if self.keyMap["arrow_up"]:
             camera_node.setY(camera_node, 1 * self.moving_speed * dt) 
@@ -86,8 +88,7 @@ class DummyBall(Interface, ShowBase):
             camera_node.setH(camera_node, -1 * turning_co * turning_speed * dt) 
                                         
         self.current_position = [camera_node.getX(), camera_node.getY(), math.radians(camera_node.getH())]
-        self.timestamp = dt
-        return self.current_position, self.timestamp         
+        self.timestamp = base_class.timer.elapsed_time()      
          
     def load_calibration(self):
         pass

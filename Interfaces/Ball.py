@@ -1,10 +1,13 @@
 import numpy as np
+import math
 import threading, multiprocessing, struct, time
 from core.Interface import *
 
 
 class Ball(Interface):
     speed, timestamp, update_location, prev_loc_x, prev_loc_y, loc_x, loc_y, theta, xmx, ymx = 0, 0, True, 0, 0, 0, 0, 0, 1, 1
+    dx, dy = 0, 0
+    current_position = [] # x, y, theta
 
     def __init__(self, exp, ball_radius=0.125):
         source_path = '/home/eflab/Tracking/'
@@ -42,6 +45,7 @@ class Ball(Interface):
             while not self.mouse1.queue.empty():
                 data1 = self.mouse1.queue.get()
                 x1 += data1['x']; y1 += data1['y']; tmst1 = data1['timestamp']
+                y = data1['y']
 
             while not self.mouse2.queue.empty():
                 data2 = self.mouse2.queue.get()
@@ -61,6 +65,10 @@ class Ball(Interface):
             x = -xm*np.sin(self.theta) - ym*np.cos(self.theta)
             y = -xm*np.cos(self.theta) + ym*np.sin(self.theta)
 
+            # Tried to use offset instead of absolute position
+            # self.dx = np.double(x) 
+            self.dy = y #np.double(y)
+
             loc_x = self.prev_loc_x + np.double(x)
             loc_y = self.prev_loc_y + np.double(y)
             timestamp = max(tmst1, tmst2)
@@ -73,9 +81,9 @@ class Ball(Interface):
                 self.theta = theta
                 self.loc_x = max(min(self.loc_x + np.double(x), self.xmx), 0)
                 self.loc_y = max(min(self.loc_y + np.double(y), self.ymx), 0)
-                print(self.loc_x, self.loc_y, self.theta/np.pi*180)
+                # print(self.loc_x, self.loc_y, self.theta/np.pi*180)
                 self.dataset.append('tracking_data', [self.loc_x, self.loc_y, self.theta, self.timestamp])
-            time.sleep(.1)
+            time.sleep(.01)
 
     def setPosition(self, xmx=1, ymx=1, x0=0, y0=0, theta0=0):
         self.loc_x = x0
@@ -83,11 +91,22 @@ class Ball(Interface):
         self.theta = theta0
         self.xmx = xmx
         self.ymx = ymx
-        pass
+        self.current_position = [x0, y0, theta0]
 
-    def getPosition(self):
-        return self.loc_x, self.loc_y, self.theta,  self.timestamp
-
+    def getPosition(self): # changed what gets returned
+        return (*self.current_position,  self.timestamp)
+    
+    def camera_positioning(self, base_class): # my addition
+        camera_node = base_class.camera_node
+        co = base_class.curr_cond['ball_to_panda_scale']
+        # camera_node.setX(camera_node, self.dx * co)
+        camera_node.setY(camera_node, abs(self.dy) * co)
+        print(self.dy)
+        camera_node.setH(math.degrees(self.theta))
+        
+        self.current_position = [camera_node.getX(), camera_node.getY(), math.radians(camera_node.getH())]
+        self.timestamp = base_class.timer.elapsed_time()
+    
     def getSpeed(self):
         return self.speed
 
