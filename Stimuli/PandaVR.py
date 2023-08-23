@@ -82,24 +82,24 @@ class Panda(Stimulus, dj.Manual):
         # """
 
     cond_tables = ['Panda', 'Panda.Object', 'Panda.Environment', 'Panda.Light', 'Panda.Movie']
-    required_fields = ['obj_id', 'obj_dur']
-    default_key = {'background_color': (0, 0, 0),
-                   'ambient_color': (0.1, 0.1, 0.1, 1),
-                   'light_idx': (1, 2),
-                   'light_color': (np.array([0.7, 0.7, 0.7, 1]), np.array([0.2, 0.2, 0.2, 1])),
-                   'light_dir': (np.array([0, -20, 0]), np.array([180, -20, 0])),
-                   'obj_pos_x': 0,
-                   'obj_pos_y': 0,
-                   'obj_mag': .5,
-                   'obj_rot': 0,
-                   'obj_tilt': 0,
-                   'obj_yaw': 0,
-                   'obj_delay': 0}
+    # required_fields = ['obj_id', 'obj_dur']
+    # default_key = {'background_color': (0, 0, 0),
+    #                'ambient_color': (0.1, 0.1, 0.1, 1),
+    #                'light_idx': (1, 2),
+    #                'light_color': (np.array([0.7, 0.7, 0.7, 1]), np.array([0.2, 0.2, 0.2, 1])),
+    #                'light_dir': (np.array([0, -20, 0]), np.array([180, -20, 0])),
+    #                'obj_pos_x': 0,
+    #                'obj_pos_y': 0,
+    #                'obj_mag': .5,
+    #                'obj_rot': 0,
+    #                'obj_tilt': 0,
+    #                'obj_yaw': 0,
+    #                'obj_delay': 0}
 
     object_files = dict()
     objects = dict()
-    dummy_test, ball_test = False, False
-    z0 = 0.5 #So that the mouse will be at eye-level with the other objects 
+    dummy_test, ball_test = False, False # Is it a ball experiment or a dummy test on pc? 
+    z0 = 0.5 # This the camera z position, so that the mouse will be at eye-level with the other objects 
         
     def init(self, exp):
         super().init(exp)
@@ -112,25 +112,30 @@ class Panda(Stimulus, dj.Manual):
             self.Fullscreen = True
             self.path = os.path.dirname(os.path.abspath(__file__)) + '/objects/'  # default path to copy local stimuli
             self.movie_path = os.path.dirname(os.path.abspath(__file__)) + '/movies/'
+            self.ball_test = True
         else:
             self.fStartDirect = False
             self.windowType = 'onscreen'
             self.Fullscreen = False
             self.path = os.path.dirname(os.path.abspath(__file__)) + '/objects/'  # default path to copy local stimuli
             self.movie_path = os.path.dirname(os.path.abspath(__file__)) + '/movies/'
+            self.dummy_test = True
         ShowBase.__init__(self, fStartDirect=self.fStartDirect, windowType=self.windowType)
         
-        self.accept('escape', self.close_window)
+        self.accept('escape', self.close_window) # ekso sto onoma tou ihsou xristou
 
     def setup(self):
         self.props = core.WindowProperties()
-        self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
-        self.props.setFullscreen(self.Fullscreen)
-        self.props.setCursorHidden(True)
-        self.props.setUndecorated(True)
+        if self.ball_test:
+            self.props.setSize(self.pipe.getDisplayWidth(), self.pipe.getDisplayHeight())
+            self.props.setFullscreen(self.Fullscreen)
+            self.props.setCursorHidden(True)
+            self.props.setUndecorated(True)
+            self.graphicsEngine.openWindows()
+            self.disableMouse()
+        elif self.dummy_test:
+            self.props.setSize(1500, 900)
         self.win.requestProperties(self.props)
-        self.graphicsEngine.openWindows()
-        self.disableMouse()
         self.isrunning = False
         self.movie_exists = False
 
@@ -140,12 +145,7 @@ class Panda(Stimulus, dj.Manual):
         self.render.setLight(self.ambientLightNP)
 
     def prepare(self, cond, stim_period=''):
-        
-        if self.exp.params['setup_conf_idx'] == 12:
-            self.dummy_test = True
-        elif self.exp.params['setup_conf_idx'] == 3:
-            self.ball_test = True
-        
+                
         self.flag_no_stim = False
         if stim_period == '':
             self.curr_cond = cond
@@ -234,10 +234,13 @@ class Panda(Stimulus, dj.Manual):
             taskMgr.step()
 
     def stop(self):
-        if self.flag_no_stim: return
+        if self.flag_no_stim: return    
+        self.exp.beh.vr.set_ready_to_false() # This exists so that space-up doesn't activate after trial has ended. Is probably unecessary
         
         for idx, obj in self.objects.items():
             obj.removeNode()
+        taskMgr.remove("Camera control")
+        taskMgr.remove("Stay on the ground")
         self.camera_node.removeNode()     
         for idx, light in self.lights.items():
             self.render.clearLight(self.lightsNP[idx])        
@@ -260,10 +263,15 @@ class Panda(Stimulus, dj.Manual):
         self.unshow(self.monitor['ready_color'])
 
     def start_stim(self):
-        self.unshow(self.monitor["start_color"])
+        self.unshow(self.monitor['start_color'])
 
     def unshow(self, color=None):
         if not color: color = self.monitor['background_color']
+        if self.dummy_test:
+            self.monitor['ready_color'] = (0, 0, 255)
+            self.monitor['start_color'] = (255, 255, 0)
+            self.monitor['reward_color'] = (0, 255, 0)
+            self.monitor['punish_color'] = (255, 0, 0)
         self.set_background_color(*color)
         self.flip(2)
 
@@ -304,22 +312,27 @@ class Panda(Stimulus, dj.Manual):
         if self.dummy_test:
             model_path = core.Filename.fromOsSpecific(model_path).getFullpath() #Windows reads file paths differently
         model = loader.loadModel(model_path)
-        model.setScale(cond['mag'])
+        if not cond['is_plane']:
+            model.setScale(cond['mag'])
+        else:
+            self.set_plane_scale(model)
         model.setHpr(cond['rot'], cond['tilt'], cond['yaw'])
         grounded_z = 0 - get_bounds(model)['z0'] #I do that so that the objects will always be right on top of the ground
         model.setPos(cond['pos_x'], cond['pos_y'], grounded_z)
         model.reparentTo(render)     
         if not cond['is_plane']:
             start_hpr = model.getHpr()        
-            hpr_interval1 = model.hprInterval(15, start_hpr + (360,0,0), start_hpr) #Set Interval for 360 rotation
+            hpr_interval1 = model.hprInterval(cond['rot_dur'], start_hpr + (360,0,0), start_hpr) #Set Interval for 360 rotation
             Sequence(hpr_interval1).loop()
             self.set_collision_sphere(model)        #Create Collision Node that surrounds the object
+        # print("object id = ", cond['id'], "   ,", model.getScale().x, "    ,", model.getScale().y, "\n  bounds:   ", get_bounds(model))
         return model
         
     def camera_control(self, task):
         dt = globalClock.getDt()
         if self.ball_test:
-            ball_pos = (self.exp.beh.get_position()[0] * 100, self.exp.beh.get_position()[1] * 100, 0) 
+            self.ball_to_panda_scale = self.curr_cond['ball_to_panda_speed_co']
+            ball_pos = (self.exp.beh.get_position()[0] * self.ball_to_panda_scale, self.exp.beh.get_position()[1] * self.ball_to_panda_scale, self.z0) 
             ball_theta = math.degrees(self.exp.beh.get_position()[2]) # rads to degrees
             self.camera_node.setPos(ball_pos) 
             self.camera_node.setH(ball_theta)
@@ -331,6 +344,9 @@ class Panda(Stimulus, dj.Manual):
         self.camera_node.setR(0)
         self.camera_node.setZ(self.z0)
         return task.cont
+    
+    def keep_within_limits(self, task):
+        pass
     
     def set_collision_sphere(self, model, is_camera = False):
         if is_camera:
@@ -347,6 +363,17 @@ class Panda(Stimulus, dj.Manual):
         if is_camera:
             self.pusher.addCollider(collision_sphere, self.camera_node)
             self.cTrav.addCollider(collision_sphere, self.pusher) 
+            
+            
+    def set_plane_scale(self, plane):
+        # cond['mag'] (object size scale) is overwritten for the plane
+        bounds = get_bounds(plane)
+        x_scale =  2 * self.curr_cond['plane_x'] / (bounds['x1'] - bounds['x0']) 
+        plane.setSx(x_scale)
+        y_scale =  2 * self.curr_cond['plane_y'] / (bounds['x1'] - bounds['x0'])
+        plane.setSy(y_scale)
+        
+        
         
 
      

@@ -29,15 +29,15 @@ def_key = {
         'x_sz'                  : 18.8,
         'y_sz'                  : 18.8,
         'trial_duration'        : 6000000,
-        'response_loc_x'        : (-15, 15),
-        'response_loc_y'        : (-15, 15),
+        'response_loc_x'        : (-14, 14),
+        'response_loc_y'        : (-14, 14),
         'x0'                    : 0,
         'y0'                    : 0,
-        'theta0'                : 90,
-        'reward_loc_x'          : -1,
-        'reward_loc_y'          : -1,
+        'theta0'                : 0,
+        'reward_loc_x'          : [-14, 14],
+        'reward_loc_y'          : [-14, 14],
         'extiction_factor'      : 3,
-        'radius'                : 20,
+        'radius'                : 5, # How close do the object you have to get to initiate reward process
         'reward_amount'         : 12,
     }
 
@@ -52,22 +52,13 @@ conditions += exp.make_conditions(stim_class=Panda(), conditions={**def_key,
                 'obj_pos_x': (-15, 15, 0), 'obj_pos_y': (-15, 15, 0), 'obj_pos_z': 0,
                 'obj_mag': (0.2, 0.2, 1), 
                 'obj_rot': 0, 'obj_tilt': 0, 'obj_yaw': 0,
-                'obj_dur': 1,
-                'obj_delay': 0,
+                'obj_rot_dur' : 15, # How long for a 360 rotation of the object
                 'obj_is_plane' : (False, False, True),
-                'movie_id' : 0,
-                'plane_id': 0,
-                'plane_pos_x': 0,
-                'plane_pos_y': 0,
-                'plane_pos_z': 0,
-                'plane_mag': 1,
-                'plane_rot': 0,
-                'plane_tilt': 0,
-                'plane_yaw': 0,
-                'movie_name' : 'MadMax'
+                # plane_x, plane_y = x, y means the plane will extend from -x,y to x,y on the x and y axes, as it's a perfect square
+                # plane_x, plane_y are used instead of a single variable A for each side, so that the plane can be any rectangle in other experiments
+                'plane_x': 16, 'plane_y': 20,     
+                'fr_movie_name' : 'MadMax'
                                 })
 
-Panda.object_files['plane'] = "models/plane/plane"
-# run experiments
 exp.push_conditions(conditions)
 exp.start()

@@ -56,7 +56,6 @@ class VRBall(Behavior, dj.Manual):
             self.vr = self.interface
         else:
             print("What is your interface???")
-            exit(0)
 
     def prepare(self, condition):
         self.in_position_flag = False
