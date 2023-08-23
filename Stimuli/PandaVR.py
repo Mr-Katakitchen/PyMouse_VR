@@ -210,6 +210,7 @@ class Panda(Stimulus, dj.Manual):
         camera.reparentTo(self.camera_node)
         taskMgr.add(self.camera_control, "Camera control")
         taskMgr.add(self.keep_me_grounded, "Stay on the ground")
+        taskMgr.add(self.keep_within_limits, "Stay on the ground")
         self.set_collision_sphere(self.camera_node, is_camera = True)      
                      
     def start(self):
@@ -333,6 +334,20 @@ class Panda(Stimulus, dj.Manual):
         self.camera_node.setR(0)
         self.camera_node.setZ(self.z0)
         return task.cont   
+    
+    def keep_within_limits(self, task): # might not be need, is used to solve the problem of mouse jumping over collision ball 
+                                      # (it happens if the dx from the ball is bigger than the ball width, after very steep movement)
+        x, y = self.curr_cond['plane_x'], self.curr_cond['plane_y']
+        if self.camera_node.getX() > x:
+            self.camera_node.setX(x)
+        if self.camera_node.getX() < -x:
+            self.camera_node.setX(-x)
+        if self.camera_node.getY() > y:
+            self.camera_node.setY(y)
+        if self.camera_node.getY() < -y:
+            self.camera_node.setY(-y)
+
+        return task.cont 
     
     def set_collision_sphere(self, model, is_camera = False):
         if is_camera:

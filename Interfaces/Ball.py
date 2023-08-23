@@ -66,8 +66,8 @@ class Ball(Interface):
             y = -xm*np.cos(self.theta) + ym*np.sin(self.theta)
 
             # Tried to use offset instead of absolute position
-            # self.dx = np.double(x) 
-            self.dy = y #np.double(y)
+            self.dx = x 
+            self.dy = y 
 
             loc_x = self.prev_loc_x + np.double(x)
             loc_y = self.prev_loc_y + np.double(y)
@@ -99,9 +99,8 @@ class Ball(Interface):
     def camera_positioning(self, base_class): # my addition
         camera_node = base_class.camera_node
         co = base_class.curr_cond['ball_to_panda_scale']
-        # camera_node.setX(camera_node, self.dx * co)
+        camera_node.setX(camera_node, self.dx * co) #You can try making the X position unchangable, so that the mouse can only move forward and rotate
         camera_node.setY(camera_node, abs(self.dy) * co)
-        print(self.dy)
         camera_node.setH(math.degrees(self.theta))
         
         self.current_position = [camera_node.getX(), camera_node.getY(), math.radians(camera_node.getH())]
