@@ -5,7 +5,7 @@ from core.Interface import *
 
 
 class Ball(Interface):
-    speed, timestamp, update_location, prev_loc_x, prev_loc_y, loc_x, loc_y, theta, xmx, ymx = 0, 0, True, 0, 0, 0, 0, 0, 1, 1
+    speed, timestamp, update_location, prev_loc_x, prev_loc_y, loc_x, loc_y, theta, xmx, ymx = 0, 0, True, 0, 0, 0, 0, 0, 100, 100
     dx, dy = 0, 0
     current_position = [] # x, y, theta
 
@@ -65,7 +65,7 @@ class Ball(Interface):
             x = -xm*np.sin(self.theta) - ym*np.cos(self.theta)
             y = -xm*np.cos(self.theta) + ym*np.sin(self.theta)
 
-            # Tried to use offset instead of absolute position
+            # I'm using offset instead of absolute position
             self.dx = x 
             self.dy = y 
 
@@ -83,7 +83,7 @@ class Ball(Interface):
                 self.loc_y = max(min(self.loc_y + np.double(y), self.ymx), 0)
                 # print(self.loc_x, self.loc_y, self.theta/np.pi*180)
                 self.dataset.append('tracking_data', [self.loc_x, self.loc_y, self.theta, self.timestamp])
-            time.sleep(.01)
+            time.sleep(.02)
 
     def setPosition(self, xmx=1, ymx=1, x0=0, y0=0, theta0=0):
         self.loc_x = x0
@@ -97,13 +97,20 @@ class Ball(Interface):
         return (*self.current_position,  self.timestamp)
     
     def camera_positioning(self, base_class): # my addition
+        
         camera_node = base_class.camera_node
-        co = base_class.curr_cond['ball_to_panda_scale']
-        camera_node.setX(camera_node, self.dx * co) #You can try making the X position unchangable, so that the mouse can only move forward and rotate
-        camera_node.setY(camera_node, abs(self.dy) * co)
+                
+        dx = base_class.adj(self.dx)
+        dy = base_class.adj(abs(self.dy))
+        camera_node.setX(camera_node, dx) #You can try making the X position unchangable, so that the mouse can only move forward and rotate
+        camera_node.setY(camera_node, dy)
         camera_node.setH(math.degrees(self.theta))
         
-        self.current_position = [camera_node.getX(), camera_node.getY(), math.radians(camera_node.getH())]
+        real_x = base_class.real(camera_node.getX())
+        real_y = base_class.real(camera_node.getY())
+             
+        self.current_position = [real_x, real_y, math.radians(camera_node.getH())]
+        print(self.current_position[0], self.loc_x, self.current_position[1], self.loc_y)
         self.timestamp = base_class.timer.elapsed_time()
     
     def getSpeed(self):

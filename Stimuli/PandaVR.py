@@ -88,8 +88,6 @@ class Panda(Stimulus, dj.Manual):
                    'light_idx'              : (1, 2),
                    'light_color'            : (np.array([0.7, 0.7, 0.7, 1]), np.array([0.2, 0.2, 0.2, 1])),
                    'light_dir'              : (np.array([0, -20, 0]), np.array([180, -20, 0])),
-                   'obj_dur_rot'            : 1,
-                   'ball_to_panda_scale'    : 30
                     }
 
     object_files = dict()
@@ -101,11 +99,11 @@ class Panda(Stimulus, dj.Manual):
         'punish_color': (255, 0, 0)
     }
     dummy_test, ball_test = False, False # Is it a ball experiment or a dummy test on pc? 
-    z0 = 0.5 # This the camera z position, so that the mouse will be at eye-level with the other objects 
+    mouse_height = 0.05 # Z position of camera that corresponds to mouse height (about 5 cms)
+    co = 15 # ball_to_panda_scale
         
     def init(self, exp):
         super().init(exp)
-        self.exp = exp
         cls = self.__class__
         self.__class__ = cls.__class__(cls.__name__ + "ShowBase", (cls, ShowBase), {})
         if self.logger.is_pi:
@@ -199,19 +197,23 @@ class Panda(Stimulus, dj.Manual):
         
         #Set Camera
         self.camera_node = core.NodePath("camera_node")
-        self.camera_node.setPos(0,0,self.z0)
+        self.z0 = self.adj(self.mouse_height)
+        self.camera_node.setPos(0, 0, self.z0) # adjusted value : real value * panda_to_ball_scale
         if 'x0' in cond:
-            self.camera_node.setX(cond['x0'])
+            self.camera_node.setX(self.adj(cond['x0']))
         if 'y0' in cond:
-            self.camera_node.setY(cond['y0'])
+            self.camera_node.setY(self.adj(cond['y0']))
         if 'theta0' in cond:
             self.camera_node.setH(math.degrees(cond['theta0'])) # rads to degrees
         self.camera_node.reparentTo(render)
         camera.reparentTo(self.camera_node)
         taskMgr.add(self.camera_control, "Camera control")
         taskMgr.add(self.keep_me_grounded, "Stay on the ground")
-        taskMgr.add(self.keep_within_limits, "Stay on the ground")
-        self.set_collision_sphere(self.camera_node, is_camera = True)      
+        taskMgr.add(self.keep_within_limits, "Keep within limits")
+        self.set_collision_sphere(self.camera_node, is_camera = True)     
+        
+        self.center_of_env = core.NodePath("0,0,0") # Is used so that the collision walls will be set relative to the (0,0,0) spot
+        
                      
     def start(self):
         if self.flag_no_stim: return
@@ -220,6 +222,10 @@ class Panda(Stimulus, dj.Manual):
             self.isrunning = True
         self.log_start()
         if self.movie_exists: self.movie.play()
+        
+        #Set Plane
+        plane_cond = get_cond(self.curr_cond, 'plane_', self.curr_cond['plane_id'])
+        self.plane = self.plane_load(plane_cond) #this function returns a panda3d model        
         
         # Set Objects
         for idx, obj in enumerate(iterable(self.curr_cond['obj_id'])):
@@ -238,13 +244,17 @@ class Panda(Stimulus, dj.Manual):
 
     def stop(self):
         if self.flag_no_stim: return    
-        self.exp.beh.vr.set_ready_to_false() # This exists so that space-up doesn't activate after trial has ended. Is probably unecessary
+        if self.dummy_test:
+            self.exp.beh.vr.set_ready_to_false() # This exists so that space-up from dummy_ball doesn't activate after trial has ended. Is probably unecessary
         
         for idx, obj in self.objects.items():
             obj.removeNode()
         taskMgr.remove("Camera control")
         taskMgr.remove("Stay on the ground")
-        self.camera_node.removeNode()     
+        taskMgr.remove("Keep within limits")
+        self.camera_node.removeNode()  
+        self.plane.removeNode()  
+        self.center_of_env.removeNode() # Is removed so that the walls attached to it are removed
         for idx, light in self.lights.items():
             self.render.clearLight(self.lightsNP[idx])        
         if self.movie_exists:
@@ -269,7 +279,7 @@ class Panda(Stimulus, dj.Manual):
         self.unshow(self.state_color['start_color'])
 
     def unshow(self, color=None):
-        if not color: color = self.state_color['background_color']
+        if not color: color = self.state_color['ready_color']
         self.set_background_color(*color)
         self.flip(2)
 
@@ -300,58 +310,74 @@ class Panda(Stimulus, dj.Manual):
                 if not os.path.isfile(filename): 
                     print('Saving %s' % filename)
                     object_info['object'].tofile(filename)
+            if 'plane_id' in cond: 
+                obj_id = cond['plane_id']
+                object_info = (Objects() & ('obj_id=%d' % obj_id)).fetch1()
+                filename = self.path + object_info['file_name']
+                self.object_files[obj_id] = filename
+                if not os.path.isfile(filename): 
+                    print('Saving %s' % filename)
+                    object_info['object'].tofile(filename)
         return conditions
 
     def get_clip_info(self, key, *fields):
         return self.logger.get(schema='stimulus', table='Movie.Clip', key=key, fields=fields)
+    
+    def plane_load(self, cond):
+        model_path = self.object_files[cond['id']]
+        if self.dummy_test:
+            model_path = core.Filename.fromOsSpecific(model_path).getFullpath() #Windows reads file paths differently
+        model = loader.loadModel(model_path)    
+        model.setPos(self.adj(self.curr_cond['xmx']/2), self.adj(self.curr_cond['ymx']/2), 0)
+        self.set_plane_scale(model) # Must be called before walls are set for appropriate positioning
+        self.set_walls(model) 
+        model.reparentTo(render)  
+        return model 
     
     def object_load(self, cond): # cond = condition for current object id
         model_path = self.object_files[cond['id']]
         if self.dummy_test:
             model_path = core.Filename.fromOsSpecific(model_path).getFullpath() #Windows reads file paths differently
         model = loader.loadModel(model_path)  
-        if not cond['is_plane']:
-            start_hpr = model.getHpr()        
-            hpr_interval1 = model.hprInterval(cond['rot_dur'], start_hpr + (360,0,0), start_hpr) #Set Interval for 360 rotation
-            Sequence(hpr_interval1).loop()
-            model.setScale(cond['mag'])
-            self.set_collision_sphere(model)        # Create Collision Node that surrounds the object
-        else:
-            self.set_plane_scale(model)
-            self.set_walls(model)
-        grounded_z = 0 - get_bounds(model)['z0'] #I do that so that the objects will always be right on top of the ground 
-        model.setPos(cond['pos_x'], cond['pos_y'], grounded_z)
+        
+        start_hpr = model.getHpr()        
+        hpr_interval1 = model.hprInterval(self.curr_cond['rot_duration'], start_hpr + (360,0,0), start_hpr) #Set Interval for 360 rotation
+        Sequence(hpr_interval1).loop()
+        model.setScale(self.adj(cond['mag'])) #Scale must be set before set_collision_sphere and z_positioning for appropriate scaling
+        self.set_collision_sphere(model) # creates collision sphere that surrounds the object
+ 
+        grounded_z = 0 - get_bounds(model)['z0'] #I do that so that the objects will always be right on top of the ground. Always is 0 
+        model.setPos(self.adj(cond['pos_x']), self.adj(cond['pos_y']), grounded_z)
         model.setHpr(cond['rot'], cond['tilt'], cond['yaw'])
         model.reparentTo(render)  
-        # print("object id = ", cond['id'], "   ,", model.getScale().x, "    ,", model.getScale().y, "\n  bounds:   ", get_bounds(model))
-        return model
+        return model      
         
     def camera_control(self, task):
         self.exp.beh.vr.camera_positioning(self)
         return task.cont
     
     def keep_me_grounded(self, task):
-        self.camera_node.setR(0)
+        self.camera_node.setR(0) # Probably not needed
         self.camera_node.setZ(self.z0)
         return task.cont   
     
-    def keep_within_limits(self, task): # might not be need, is used to solve the problem of mouse jumping over collision ball 
-                                      # (it happens if the dx from the ball is bigger than the ball width, after very steep movement)
-        x, y = self.curr_cond['plane_x'], self.curr_cond['plane_y']
+    def keep_within_limits(self, task): 
+        # might not be needed, is used to solve the problem of mouse jumping over collision wall
+        # it happens if the dx from the ball is bigger than the ball width, after very steep movesment
+        x, y = self.adj(self.curr_cond['xmx']), self.adj(self.curr_cond['ymx'])
         if self.camera_node.getX() > x:
             self.camera_node.setX(x)
-        if self.camera_node.getX() < -x:
-            self.camera_node.setX(-x)
+        if self.camera_node.getX() < 0:
+            self.camera_node.setX(0)
         if self.camera_node.getY() > y:
             self.camera_node.setY(y)
-        if self.camera_node.getY() < -y:
-            self.camera_node.setY(-y)
-
+        if self.camera_node.getY() < 0:
+            self.camera_node.setY(0)
         return task.cont 
     
     def set_collision_sphere(self, model, is_camera = False):
         if is_camera:
-            radius = 0.3
+            radius = self.z0 
         else:
             bounds = model.getChild(0).getBounds()
             radius = bounds.getRadius() 
@@ -366,29 +392,34 @@ class Panda(Stimulus, dj.Manual):
             self.cTrav.addCollider(sphere_node, self.pusher) 
                      
     def set_plane_scale(self, plane):
-        # cond['mag'] (object size scale) is overwritten for the plane
         bounds = get_bounds(plane)
-        x_scale =  2 * self.curr_cond['plane_x'] / (bounds['x1'] - bounds['x0']) 
-        plane.setSx(x_scale)
-        y_scale =  2 * self.curr_cond['plane_y'] / (bounds['x1'] - bounds['x0'])
-        plane.setSy(y_scale)
+        x_scale =  self.curr_cond['xmx'] / (bounds['x1'] - bounds['x0']) 
+        plane.setSx(self.adj(x_scale))
+        y_scale =  self.curr_cond['ymx'] / (bounds['x1'] - bounds['x0'])
+        plane.setSy(self.adj(y_scale))
         
     def set_walls(self, plane):
         box = core.CollisionNode("")
-        x0 = get_bounds(plane)['x0']
-        x1 = get_bounds(plane)['x1']
-        y0 = get_bounds(plane)['y0']
-        y1 = get_bounds(plane)['y1']
-        width = 0.5
-        box.addSolid(core.CollisionBox((x0,0,0), width, y1, 4))
-        box.addSolid(core.CollisionBox((x1,0,0), width, y1, 4))
-        box.addSolid(core.CollisionBox((0,y0,0), x1, width, 4))
-        box.addSolid(core.CollisionBox((0,y1,0), x1, width, 4))
-        center_of_env = core.NodePath("0,0,0") 
-        center_of_env.setPos(0,0,0)
-        center_of_env.reparentTo(render)
-        box_node = center_of_env.attachNewNode(box) # If the plane isn't a perfect square, positioning won't be right if the collision boxes are attached to it
+        x = get_bounds(plane)['x1']
+        y = get_bounds(plane)['y1']
+        d = self.z0
+        width, height = d, d
+        box.addSolid(core.CollisionBox((-d, y/2, 0), width, y/2, height))
+        box.addSolid(core.CollisionBox((x + d, y/2, 0), width, y/2, height))
+        box.addSolid(core.CollisionBox((x/2, -d, 0), x/2, width, height))
+        box.addSolid(core.CollisionBox((x/2, y + d, 0), x/2, width, height))
+        self.center_of_env.setPos(0, 0, 0)
+        self.center_of_env.reparentTo(render)
+        box_node = self.center_of_env.attachNewNode(box) # If the plane isn't a perfect square, positioning won't be right if the collision boxes are attached to it
         if self.dummy_test: box_node.show()
+        
+    def adj(self, value): # Multiplies values by a ball_to_panda_scale_coefficient so that they're closer to panda3d's default values
+        return value  * self.co
+    
+    def real(self, value): # Divides by the ball_to_panda_scale_coefficient to convert values back to meters (ball scale)
+        return value / self.co
+        
+        
         
         
         

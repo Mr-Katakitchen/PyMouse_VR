@@ -15,7 +15,7 @@ class DummyBall(Interface, ShowBase):
                 "arrow_down" : False,
                 "space" : False}
     mouse_is_moving = False
-    moving_speed = 15
+    mouse_moving_speed = 1 # m/s
     
     current_position = [] #x, y, theta (rotation)
     timestamp = 0
@@ -49,7 +49,7 @@ class DummyBall(Interface, ShowBase):
 
     def getSpeed(self):
         if self.mouse_is_moving: # not moving
-            speed = self.moving_speed
+            speed = self.mouse_moving_speed
         else:
             speed = 0
         return speed
@@ -73,21 +73,23 @@ class DummyBall(Interface, ShowBase):
     def camera_positioning(self, base_class):
         
         camera_node = base_class.camera_node
-        self.moving_speed = 15.0
-        turning_speed = 120.0
+        virtual_speed = base_class.adj(self.mouse_moving_speed)
+        turning_speed = 110.0
         turning_co = 0.5 if self.mouse_is_moving else 1 #So that the mouse moves more naturally
         dt = globalClock.getDt() # Time since the last frame was drawn in the active ShowBase window
         
         if self.keyMap["arrow_up"]:
-            camera_node.setY(camera_node, 1 * self.moving_speed * dt) 
+            camera_node.setY(camera_node, 1 * virtual_speed * dt) 
         if self.keyMap["arrow_down"]:
-            camera_node.setY(camera_node, -1 * self.moving_speed * dt) 
+            camera_node.setY(camera_node, -1 * virtual_speed * dt) 
         if self.keyMap["arrow_left"]:
             camera_node.setH(camera_node, turning_co * turning_speed * dt) 
         if self.keyMap["arrow_right"]:
             camera_node.setH(camera_node, -1 * turning_co * turning_speed * dt) 
-                                        
-        self.current_position = [camera_node.getX(), camera_node.getY(), math.radians(camera_node.getH())]
+                      
+        real_x = base_class.real(camera_node.getX())
+        real_y = base_class.real(camera_node.getY())                                 
+        self.current_position = [real_x, real_y, math.radians(camera_node.getH())]  
         self.timestamp = base_class.timer.elapsed_time()      
          
     def load_calibration(self):
@@ -109,7 +111,7 @@ class DummyBall(Interface, ShowBase):
         self.ready = False  #gets called when new trial starts, so that spacebar-activation resets
         
     def _proximity_change(self, event, port):
-        if event == 'proximity_true' and not self.ready:
+        if event == 'proximity_true' and not self.ready and not self.mouse_is_moving:
             self.timer_ready.start() 
             self.ready = True
             port =3  
@@ -145,10 +147,10 @@ class DummyBall(Interface, ShowBase):
         #     self.logger.update_setup_info({'status': 'stop'})
         
     def _port_activated(self, event, port):
-        if event == 'left_port':
+        if event == 'left_port' and not self.mouse_is_moving:
             print('Probe 1 activated!')
             port = 1
-        if event == 'right_port':
+        if event == 'right_port' and not self.mouse_is_moving:
             print('Probe 2 activated!')
             port = 2
         if port:
