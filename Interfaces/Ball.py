@@ -69,8 +69,8 @@ class Ball(Interface):
             self.dx = x 
             self.dy = y 
 
-            loc_x = self.prev_loc_x + np.double(x)
-            loc_y = self.prev_loc_y + np.double(y)
+            loc_x = self.prev_loc_x - np.double(x)
+            loc_y = self.prev_loc_y - np.double(y)
             timestamp = max(tmst1, tmst2)
             self.speed = np.sqrt((loc_x - self.prev_loc_x)**2 + (loc_y - self.prev_loc_y)**2)/(timestamp - self.timestamp)
             self.prev_loc_x = max(min(loc_x, self.xmx), 0)
@@ -83,35 +83,56 @@ class Ball(Interface):
                 self.loc_y = max(min(self.loc_y + np.double(y), self.ymx), 0)
                 # print(self.loc_x, self.loc_y, self.theta/np.pi*180)
                 self.dataset.append('tracking_data', [self.loc_x, self.loc_y, self.theta, self.timestamp])
-            time.sleep(.02)
+            time.sleep(0.1)
 
-    def setPosition(self, xmx=1, ymx=1, x0=0, y0=0, theta0=0):
+    def setPosition(self, x0=0, y0=0, theta0=0):
         self.loc_x = x0
         self.loc_y = y0
         self.theta = theta0
-        self.xmx = xmx
-        self.ymx = ymx
         self.current_position = [x0, y0, theta0]
 
     def getPosition(self): # changed what gets returned
         return (*self.current_position,  self.timestamp)
     
-    def camera_positioning(self, base_class): # my addition
+    def camera_positioning(self, camera_node, timestamp, adj, real): # my addition
+        """Positions the camera and updates the current_position variable, that Behavior gets from Interface
+
+        Args:
+            camera_node (panda_object): the empty node that has the main camera attached to it
+            timestamp (int?): what gets returned from timer.elapsed_time()
+            adj (method): method that multiplies value by ball_to_panda_scale
+            real (method): inverted adj
+        """       
         
-        camera_node = base_class.camera_node
-                
-        dx = base_class.adj(self.dx)
-        dy = base_class.adj(abs(self.dy))
-        camera_node.setX(camera_node, dx) #You can try making the X position unchangable, so that the mouse can only move forward and rotate
-        camera_node.setY(camera_node, dy)
-        camera_node.setH(math.degrees(self.theta))
+        # Values get multiplied by ball_to_panda_scale to be properly projected with Panda3D
+        dx = adj(self.dx)
+        dy = adj(abs(self.dy)) 
         
-        real_x = base_class.real(camera_node.getX())
-        real_y = base_class.real(camera_node.getY())
-             
+        # camera_node.setY(camera_node, dy) # node.setY(node, dy) : newY = oldY + dy
+        # # dy needs an absolute value, because the above positioning method is relative to the previous position. 
+        # # Mouse will move to the direction it's looking, so dy always needs to be positive. 
+        
+        #You can try making the X position unchangable, so that the mouse can only move forward or rotate
+        # camera_node.setX(camera_node, dx) 
+        camera_node.setH(math.degrees(self.theta)) # H is given the absolute value of theta, and not an offset
+        
+        camera_node.setY(adj(self.loc_y))  
+        camera_node.setX(adj(self.loc_x))
+        
+        
+        # After that, the positions get rescaled to the ball scaling to get passed to Behavior and to the database
+        real_x = real(camera_node.getX())
+        real_y = real(camera_node.getY())
         self.current_position = [real_x, real_y, math.radians(camera_node.getH())]
-        print(self.current_position[0], self.loc_x, self.current_position[1], self.loc_y)
-        self.timestamp = base_class.timer.elapsed_time()
+        self.timestamp = timestamp
+        
+        x = self.current_position[0]
+        y = self.current_position[1]
+        def F(number):
+            rounded_number = round(number, 5)
+            formatted_number = f"{rounded_number:.6f}"
+            return formatted_number
+        print(F(x), F(self.loc_x), F(y), F(self.loc_y))
     
     def getSpeed(self):
         return self.speed

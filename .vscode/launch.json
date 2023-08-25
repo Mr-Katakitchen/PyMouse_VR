@@ -9,7 +9,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env": { "PYTHONPATH": "${workspaceRoot}"},
-            "args":["15001"]
+            "args":["15000"]
         }
     ]
 }
