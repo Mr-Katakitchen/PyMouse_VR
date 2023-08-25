@@ -17,7 +17,7 @@ class DummyBall(Interface, ShowBase):
                 "space" : False
                 }
     mouse_is_moving = False 
-    mouse_moving_speed = 1 
+    mouse_moving_speed = 1
     
     current_position = [] # x, y, theta 
     timestamp = 0

@@ -106,18 +106,18 @@ class Ball(Interface):
         
         # Values get multiplied by ball_to_panda_scale to be properly projected with Panda3D
         dx = adj(self.dx)
-        dy = adj(abs(self.dy)) 
+        dy = adj(self.dy)
         
-        # camera_node.setY(camera_node, dy) # node.setY(node, dy) : newY = oldY + dy
-        # # dy needs an absolute value, because the above positioning method is relative to the previous position. 
-        # # Mouse will move to the direction it's looking, so dy always needs to be positive. 
+        camera_node.setY(camera_node, dy) # node.setY(node, dy) : newY = oldY + dy
+        # dy needs an absolute value, because the above positioning method is relative to the previous position. 
+        # Mouse will move to the direction it's looking, so dy always needs to be positive. 
         
-        #You can try making the X position unchangable, so that the mouse can only move forward or rotate
-        # camera_node.setX(camera_node, dx) 
+        # You can try making the X position unchangable, so that the mouse can only move forward or rotate
+        camera_node.setX(camera_node, dx) 
         camera_node.setH(math.degrees(self.theta)) # H is given the absolute value of theta, and not an offset
         
-        camera_node.setY(adj(self.loc_y))  
-        camera_node.setX(adj(self.loc_x))
+        # camera_node.setY(adj(self.loc_y))  
+        # camera_node.setX(adj(self.loc_x))
         
         
         # After that, the positions get rescaled to the ball scaling to get passed to Behavior and to the database
