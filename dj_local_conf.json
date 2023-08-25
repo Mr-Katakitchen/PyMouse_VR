@@ -1,6 +1,0 @@
-{
-    "database.host": "database.eflab.org",
-    "database.user": "eflab",
-    "database.password": "cajal123",
-    "database.port":3306
-}
